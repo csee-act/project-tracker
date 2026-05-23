@@ -603,8 +603,7 @@ const firebaseConfig={
 };
 const CONFIGURED=!firebaseConfig.apiKey.includes('placeholder');
 if(!CONFIGURED){
-  // No real API key yet — run in local-only mode, skip auth gate
-  document.addEventListener('DOMContentLoaded',()=>{
+  window.addEventListener('load',()=>{
     const gate=document.getElementById('auth-gate');
     if(gate)gate.style.display='none';
     const dot=document.getElementById('sync-dot');
@@ -703,7 +702,8 @@ function startPresence(user){
   });
 }
 
-// Auth state
+// Auth state — wait for DOM + all scripts to be ready before starting
+window.addEventListener('load', () => {
 onAuthStateChanged(auth,async user=>{
   if(user){
     _currentUser=user;updateUserChip(user);showAuthGate(false);setSyncStatus("saving","Connecting...");
@@ -723,6 +723,7 @@ onAuthStateChanged(auth,async user=>{
 document.getElementById("btn-signin-gate").addEventListener("click",doSignIn);
 document.getElementById("btn-signout").addEventListener("click",doSignOut);
 window._fbUpload=scheduleUpload;
+}); // end window load
 </script>
 </head>
 <body>
@@ -1155,7 +1156,7 @@ function pctColor(v){return v>=100?'var(--a1)':v>=70?'var(--a4)':v>=40?'var(--a3
 // Score out of 40 = "full" (arbitrary max for display)
 const CAP_MAX=40;
 function memberCapScore(mid){
-  return allSubs().filter(s=>s.pics.includes(mid)).reduce((a,s)=>{
+  return allSubs().filter(s=>(s.pics||[]).includes(mid)).reduce((a,s)=>{
     const d=s.diff||5;const share=s.pics.length>0?1/s.pics.length:1;
     return a+(d*share);
   },0);
@@ -1328,7 +1329,7 @@ function renderCapacity(){
     const row=document.createElement('div');row.className=`cap-row ${st}`;
     row.innerHTML=`<div class="cap-name"><span style="color:${m.color}">${esc(m.name)}</span><span>${icon}</span></div>
       <div class="cap-score-wrap"><div class="cap-bar-bg"><div class="cap-bar-fill" style="width:${pct}%;background:${barColor}"></div></div><div class="cap-score-num" style="color:${barColor}">${score.toFixed(0)}</div></div>
-      <div class="cap-status">${st==='busy'?'Heavy load':st==='moderate'?'Moderate':'Has capacity'} · ${allSubs().filter(s=>s.pics.includes(m.id)).length} projects</div>`;
+      <div class="cap-status">${st==='busy'?'Heavy load':st==='moderate'?'Moderate':'Has capacity'} · ${allSubs().filter(s=>(s.pics||[]).includes(m.id)).length} projects</div>`;
     list.appendChild(row);
   });
 }
@@ -1372,9 +1373,9 @@ function renderProjects(){
         if(s.start||s.eta){const dr=document.createElement('div');dr.className='sp-dates';if(s.start)dr.innerHTML+=`<span><span class="date-lbl">Start</span>${fmtD(s.start)}</span>`;if(s.eta)dr.innerHTML+=`<span><span class="date-lbl">ETA</span>${fmtD(s.eta)}</span>`;sp.appendChild(dr);}
         const dz=document.createElement('div');dz.className='drop-zone'+(s.pics.length===0?' empty':'');
         s.pics.forEach(mid=>{const m=getM(mid);if(m)dz.appendChild(makeChip(m,s));});
-        dz.addEventListener('dragover',e=>{e.preventDefault();if(!dragging)return;sp.classList.toggle('drag-over',!s.pics.includes(dragging));sp.classList.toggle('drag-reject',s.pics.includes(dragging));dz.classList.add('drag-active');});
+        dz.addEventListener('dragover',e=>{e.preventDefault();if(!dragging)return;sp.classList.toggle('drag-over',!(s.pics||[]).includes(dragging));sp.classList.toggle('drag-reject',(s.pics||[]).includes(dragging));dz.classList.add('drag-active');});
         dz.addEventListener('dragleave',()=>{sp.classList.remove('drag-over','drag-reject');dz.classList.remove('drag-active');});
-        dz.addEventListener('drop',e=>{e.preventDefault();sp.classList.remove('drag-over','drag-reject');dz.classList.remove('drag-active');const mid=e.dataTransfer.getData('text/plain');if(mid&&!s.pics.includes(mid)){s.pics.push(mid);renderAll();}});
+        dz.addEventListener('drop',e=>{e.preventDefault();sp.classList.remove('drag-over','drag-reject');dz.classList.remove('drag-active');const mid=e.dataTransfer.getData('text/plain');if(mid&&!(s.pics||[]).includes(mid)){s.pics.push(mid);renderAll();}});
         sp.appendChild(dz);
         if(s.notes){const nb=document.createElement('div');nb.className='sp-notes';const ns=document.createElement('span');ns.className='sp-notes-text';ns.contentEditable='true';ns.textContent=s.notes;ns.addEventListener('blur',()=>{s.notes=ns.textContent.trim();});ns.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ns.blur();}});nb.appendChild(ns);sp.appendChild(nb);}
         spList.appendChild(sp);
@@ -1427,7 +1428,7 @@ function renderOverview(){
     cell.addEventListener('click',()=>{document.querySelectorAll('.tab')[0].click();});
     wrap.appendChild(cell);
   });
-  const mmap=document.getElementById('member-map');mmap.innerHTML='';[...members].sort((a,b)=>memberCapScore(b.id)-memberCapScore(a.id)).forEach(m=>{const projs=allSubs().filter(s=>s.pics.includes(m.id));if(!projs.length)return;const row=document.createElement('div');row.className='mm-row';row.innerHTML=`<div class="mm-name" style="color:${m.color}">${esc(m.name)}</div><div class="mm-projs">${projs.map(s=>{const c=customers.find(cu=>cu.subs.some(x=>x.id===s.id));return`<span class="mm-tag" title="${esc(s.title)} D${s.diff||5}">${esc(c?c.name:'?')} › ${s.title.length>14?s.title.slice(0,13)+'…':esc(s.title)}</span>`;}).join('')}</div>`;mmap.appendChild(row);});
+  const mmap=document.getElementById('member-map');mmap.innerHTML='';[...members].sort((a,b)=>memberCapScore(b.id)-memberCapScore(a.id)).forEach(m=>{const projs=allSubs().filter(s=>(s.pics||[]).includes(m.id));if(!projs.length)return;const row=document.createElement('div');row.className='mm-row';row.innerHTML=`<div class="mm-name" style="color:${m.color}">${esc(m.name)}</div><div class="mm-projs">${projs.map(s=>{const c=customers.find(cu=>cu.subs.some(x=>x.id===s.id));return`<span class="mm-tag" title="${esc(s.title)} D${s.diff||5}">${esc(c?c.name:'?')} › ${s.title.length>14?s.title.slice(0,13)+'…':esc(s.title)}</span>`;}).join('')}</div>`;mmap.appendChild(row);});
   const tb=document.getElementById('type-breakdown');tb.innerHTML='';const counts={};allSubs().forEach(s=>{counts[s.type||'Active']=(counts[s.type||'Active']||0)+1;});const max=Math.max(...Object.values(counts),1);Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([t,n])=>{const ts=tStyle(t);const row=document.createElement('div');row.className='tb-row';row.innerHTML=`<span class="tb-label" style="color:${ts.color}">${esc(t)}</span><div class="tb-bar-bg"><div class="tb-bar-fill" style="width:${Math.round(n/max*100)}%;background:${ts.color}"></div></div><span class="tb-count">${n}</span>`;tb.appendChild(row);});
 }
 
@@ -1435,7 +1436,7 @@ function renderOverview(){
 function renderWorkload(){
   renderPieChart();const grid=document.getElementById('wl-grid');grid.innerHTML='';
   [...members].sort((a,b)=>memberCapScore(b.id)-memberCapScore(a.id)).forEach(m=>{
-    const score=memberCapScore(m.id);const st=capStatus(score);const projs=allSubs().filter(s=>s.pics.includes(m.id));
+    const score=memberCapScore(m.id);const st=capStatus(score);const projs=allSubs().filter(s=>(s.pics||[]).includes(m.id));
     const pctBar=Math.min(100,(score/CAP_MAX)*100);const bc=st==='busy'?'var(--a2)':st==='moderate'?'var(--a3)':'var(--a1)';const lbl=st==='busy'?'🔴 Heavy':st==='moderate'?'🟡 Moderate':'🟢 Available';
     const card=document.createElement('div');card.className=`wl-card ${st==='busy'?'heavy':st==='moderate'?'moderate':''}`;
     card.innerHTML=`<div class="wl-count">${score.toFixed(0)}</div>
@@ -1623,7 +1624,7 @@ function renderCalHeatmap(){
 
       // Count active projects for this member on this date
       const activeProjs = allSubs().filter(s=>
-        s.pics.includes(m.id) && s.start && s.eta && s.start<=dateStr && s.eta>=dateStr
+        (s.pics||[]).includes(m.id) && s.start && s.eta && s.start<=dateStr && s.eta>=dateStr
       );
 
       // Compute busyness: sum of difficulty / team_size for active projects
@@ -2123,7 +2124,7 @@ function wsTeam(){
   const r=[['Member','Cap Score','Status','Projects','Weekend Hours','Project List']];
   [...members].sort((a,b)=>memberCapScore(b.id)-memberCapScore(a.id)).forEach(m=>{
     const sc=memberCapScore(m.id);const st=capStatus(sc);
-    const projs=allSubs().filter(s=>s.pics.includes(m.id));
+    const projs=allSubs().filter(s=>(s.pics||[]).includes(m.id));
     const wh=weekendLogs.filter(l=>(l.mids||[l.mid]).includes(m.id)).reduce((a,l)=>a+l.hours,0);
     r.push([m.name,+sc.toFixed(1),st==='busy'?'Heavy':st==='moderate'?'Moderate':'Available',projs.length,wh,projs.map(s=>{const c=customers.find(cu=>cu.subs.some(x=>x.id===s.id));return c?c.name+'-'+s.title:s.title;}).join(' | ')]);
   });
@@ -2444,7 +2445,11 @@ function mkSrId(){ return 'sr'+(nextSrId++); }
 function defQuarters(){ return [{q:'Q1',assignees:[],subreports:[]},{q:'Q2',assignees:[],subreports:[]},{q:'Q3',assignees:[],subreports:[]},{q:'Q4',assignees:[],subreports:[]}]; }
 // migrate old data: add subreports array if missing
 function migrateRptData(){
-  reportCustomers.forEach(rc=> rc.years.forEach(y=> y.quarters.forEach(q=>{ if(!q.subreports) q.subreports=[]; })));
+  reportCustomers.forEach(rc=>(rc.years||[]).forEach(y=>(y.quarters||[]).forEach(q=>{
+    if(!q.subreports) q.subreports=[];
+    if(!q.assignees) q.assignees=[];
+    q.subreports.forEach(sr=>{ if(!sr.mids) sr.mids=[]; });
+  })));
 }
 
 // ── RENDER POOL ───────────────────────────────────────────────────────────
@@ -2660,7 +2665,7 @@ function renderRptBoards(){
             av.innerHTML=`${ini(m.name)}<button class="rpt-sr-av-rm" title="Remove ${esc(m.name)}">✕</button>`;
             av.querySelector('.rpt-sr-av-rm').addEventListener('click',e=>{
               e.stopPropagation();
-              sr.mids=sr.mids.filter(x=>x!==mid);
+              sr.mids=(sr.mids||[]).filter(x=>x!==mid);
               renderReports(); saveToStorage();
             });
             avatarStack.appendChild(av);
@@ -2822,7 +2827,8 @@ document.getElementById('qedit-cancel').addEventListener('click',closeQEdit);
 document.getElementById('qedit-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('qedit-modal')) closeQEdit(); });
 
 // ── SUB-REPORT MODAL ──────────────────────────────────────────────────────
-function buildSrMemberPicker(selectedMids=[]){
+function buildSrMemberPicker(selectedMids){
+  selectedMids=selectedMids||[];
   const picker=document.getElementById('sr-member-picker');
   picker.innerHTML='';
   if(!members.length){ picker.innerHTML='<span style="font-size:9px;color:var(--muted);">No team members yet</span>'; return; }
@@ -2847,7 +2853,7 @@ function buildSrMemberPicker(selectedMids=[]){
   });
 }
 function getSrSelectedMids(){
-  return [...document.querySelectorAll('.sr-member-pill.selected')].map(p=>p.dataset.mid);
+  return [...document.querySelectorAll('.sr-member-pill.selected')].map(p=>p.dataset.mid).filter(Boolean);
 }
 function openSrModal(rc,y,q,sr){
   _srCtx={rc,y,q}; _srEditId=sr?sr.id:null;
