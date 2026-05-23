@@ -601,6 +601,21 @@ const firebaseConfig={
   messagingSenderId:"598345413237",
   appId:"1:598345413237:web:7c001e89946116f0d3be3c"
 };
+const CONFIGURED=!firebaseConfig.apiKey.includes('placeholder');
+if(!CONFIGURED){
+  // No real API key yet — run in local-only mode, skip auth gate
+  document.addEventListener('DOMContentLoaded',()=>{
+    const gate=document.getElementById('auth-gate');
+    if(gate)gate.style.display='none';
+    const dot=document.getElementById('sync-dot');
+    const lbl=document.getElementById('sync-label');
+    if(dot)dot.style.background='#78716c';
+    if(lbl)lbl.textContent='Local only';
+    try{const raw=localStorage.getItem('proj_tracker_v1');if(raw)applyState(JSON.parse(raw));}catch(e){}
+    renderAll();
+  });
+  throw new Error('Firebase not configured — running local-only.');
+}
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);const db=getDatabase(app);const provider=new GoogleAuthProvider();
 const DATA_PATH="tracker/data",META_PATH="tracker/meta",PRES_PATH="tracker/presence";
@@ -716,10 +731,10 @@ window._fbUpload=scheduleUpload;
   <div class="tabs" id="main-tabs">
     <button class="tab active" data-tab="assign">Assign</button>
     <button class="tab" data-tab="overview">Overview</button>
-    <button class="tab" data-tab="tenders">Tenders</button>
     <button class="tab" data-tab="workload">Workload</button>
-    <button class="tab" data-tab="calendar">Calendar</button>
     <button class="tab" data-tab="reports">📋 Reports</button>
+    <button class="tab" data-tab="calendar">Calendar</button>
+    <button class="tab" data-tab="tenders">Tenders</button>
     <button class="tab" data-tab="weekend">🌙 Weekend Log</button>
   </div>
   <div class="save-bar">
@@ -2058,7 +2073,8 @@ const _origRenderAll=function(){
   renderPool();renderCapacity();renderProjects();renderTenders();renderWorkload();updateStats();
   if(!document.getElementById("tab-weekend").classList.contains("hidden"))renderWeekend();
   if(!document.getElementById("tab-calendar").classList.contains("hidden"))renderCalendar();
-  if(!document.getElementById("tab-reports").classList.contains("hidden"))renderReports();
+  // Always render reports so data is ready when tab is clicked
+  renderReports();
 };
 function renderAll(){
   _origRenderAll();
@@ -2294,10 +2310,8 @@ document.getElementById('btn-import').addEventListener('change',function(e){
 })();
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
-// Firebase auth observer (in the module above) handles initial load + renderAll.
-// Show auth gate immediately; the module hides it once the user signs in.
-document.getElementById('auth-gate').style.display='flex';
-
+// Firebase module shows auth gate when CONFIGURED (real API key present).
+// Local-only fallback (no key) is handled inside the module above.
 </script>
 
 <!-- ── SUB-REPORT MODAL ──────────────────────────────────────────────────── -->
