@@ -603,7 +603,7 @@ const firebaseConfig={
 };
 const CONFIGURED=!firebaseConfig.apiKey.includes('placeholder');
 if(!CONFIGURED){
-  window.addEventListener('load',()=>{
+  document.addEventListener('DOMContentLoaded',()=>{
     const gate=document.getElementById('auth-gate');
     if(gate)gate.style.display='none';
     const dot=document.getElementById('sync-dot');
@@ -702,8 +702,8 @@ function startPresence(user){
   });
 }
 
-// Auth state — wait for DOM + all scripts to be ready before starting
-window.addEventListener('load', () => {
+// Auth state — DOMContentLoaded ensures main script functions exist
+document.addEventListener('DOMContentLoaded', () => {
 onAuthStateChanged(auth,async user=>{
   if(user){
     _currentUser=user;updateUserChip(user);showAuthGate(false);setSyncStatus("saving","Connecting...");
@@ -712,7 +712,7 @@ onAuthStateChanged(auth,async user=>{
       if(snap.exists()){_remoteUpdate=true;applyState(snap.val());_remoteUpdate=false;}
       else{loadFromStorage();await set(ref(db,DATA_PATH),collectState());await set(ref(db,META_PATH),{lastSaved:Date.now(),lastUser:user.displayName||user.email});}
       renderAll();setSyncStatus("live");
-    }catch(e){console.error(e);loadFromStorage();renderAll();setSyncStatus("offline");}
+    }catch(e){console.error("Firebase init error:",e.message,e.stack);loadFromStorage();renderAll();setSyncStatus("offline","Error: "+e.message.slice(0,30));}
     startListening();startPresence(user);
   }else{
     _currentUser=null;updateUserChip(null);showAuthGate(true);setSyncStatus("auth");
@@ -723,7 +723,7 @@ onAuthStateChanged(auth,async user=>{
 document.getElementById("btn-signin-gate").addEventListener("click",doSignIn);
 document.getElementById("btn-signout").addEventListener("click",doSignOut);
 window._fbUpload=scheduleUpload;
-}); // end window load
+}); // end DOMContentLoaded
 </script>
 </head>
 <body>
@@ -1157,7 +1157,7 @@ function pctColor(v){return v>=100?'var(--a1)':v>=70?'var(--a4)':v>=40?'var(--a3
 const CAP_MAX=40;
 function memberCapScore(mid){
   return allSubs().filter(s=>(s.pics||[]).includes(mid)).reduce((a,s)=>{
-    const d=s.diff||5;const share=s.pics.length>0?1/s.pics.length:1;
+    const d=s.diff||5;const pics=s.pics||[];const share=pics.length>0?1/pics.length:1;
     return a+(d*share);
   },0);
 }
@@ -1371,7 +1371,7 @@ function renderProjects(){
         spHead.appendChild(sdot);spHead.appendChild(spLeft);spHead.appendChild(spRight);sp.appendChild(spHead);
         const pv=s.pct||0;const prog=document.createElement('div');prog.className='sp-progress';prog.innerHTML=`<div class="prog-bg"><div class="prog-fill" style="width:${pv}%;background:${pctColor(pv)}"></div></div><div class="prog-pct" style="color:${pctColor(pv)}">${pv}%</div>`;sp.appendChild(prog);
         if(s.start||s.eta){const dr=document.createElement('div');dr.className='sp-dates';if(s.start)dr.innerHTML+=`<span><span class="date-lbl">Start</span>${fmtD(s.start)}</span>`;if(s.eta)dr.innerHTML+=`<span><span class="date-lbl">ETA</span>${fmtD(s.eta)}</span>`;sp.appendChild(dr);}
-        const dz=document.createElement('div');dz.className='drop-zone'+(s.pics.length===0?' empty':'');
+        const dz=document.createElement('div');dz.className='drop-zone'+((s.pics||[]).length===0?' empty':'');
         s.pics.forEach(mid=>{const m=getM(mid);if(m)dz.appendChild(makeChip(m,s));});
         dz.addEventListener('dragover',e=>{e.preventDefault();if(!dragging)return;sp.classList.toggle('drag-over',!(s.pics||[]).includes(dragging));sp.classList.toggle('drag-reject',(s.pics||[]).includes(dragging));dz.classList.add('drag-active');});
         dz.addEventListener('dragleave',()=>{sp.classList.remove('drag-over','drag-reject');dz.classList.remove('drag-active');});
@@ -1629,7 +1629,7 @@ function renderCalHeatmap(){
 
       // Compute busyness: sum of difficulty / team_size for active projects
       const busyness = activeProjs.reduce((a,s)=>{
-        const share = s.pics.length>0 ? 1/s.pics.length : 1;
+        const _pics=s.pics||[];const share=_pics.length>0?1/_pics.length:1;
         return a + (s.diff||5)*share;
       }, 0);
 
@@ -1743,7 +1743,7 @@ document.getElementById('we-proj-select').addEventListener('change',function(){
   const found=findSub(sid);if(!found)return;
   const proj=document.getElementById('we-project');if(!proj.value)proj.value=found.s.title;
   // also pre-assign project members who aren't already assigned
-  if(weAssignedMids.length===0){weAssignedMids=[...found.s.pics];buildWePool();buildWeAssigned();}
+  if(weAssignedMids.length===0){weAssignedMids=[...(found.s.pics||[])];buildWePool();buildWeAssigned();}
 });
 
 function closeWeModal(){weModal.classList.add('hidden');}
