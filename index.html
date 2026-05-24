@@ -2049,16 +2049,36 @@ document.getElementById('cal-today').addEventListener('click',()=>{calYear=new D
 // ── PERSISTENCE ──
 const STORAGE_KEY="proj_tracker_v1";
 function collectState(){return{members,customers,tenders,leaves,weekendLogs,TYPES,nextCid,nextSid,nextTid,nextMid,nextLid,nextWid,reportCustomers,nextRcid};}
+function toArr(v){ if(!v) return []; if(Array.isArray(v)) return v; return Object.values(v); }
 function applyState(s){
   if(!s)return;
-  if(s.members)members=s.members;if(s.customers)customers=s.customers;
-  if(s.tenders)tenders=s.tenders;if(s.leaves)leaves=s.leaves;
-  if(s.weekendLogs)weekendLogs=s.weekendLogs;if(s.TYPES)TYPES=s.TYPES;
-  if(s.nextCid)nextCid=s.nextCid;if(s.nextSid)nextSid=s.nextSid;
-  if(s.nextTid)nextTid=s.nextTid;if(s.nextMid)nextMid=s.nextMid;
-  if(s.nextLid)nextLid=s.nextLid;if(s.nextWid)nextWid=s.nextWid;
-  if(s.reportCustomers)reportCustomers=s.reportCustomers;
-  if(s.nextRcid)nextRcid=s.nextRcid;
+  if(s.members!==undefined)   members         = toArr(s.members);
+  if(s.customers!==undefined) customers = toArr(s.customers).map(c=>({
+    ...c,
+    subs: toArr(c.subs).map(s=>({...s, pics: toArr(s.pics)}))
+  }));
+  if(s.tenders!==undefined)   tenders     = toArr(s.tenders).map(t=>({...t, members: toArr(t.members)}));
+  if(s.leaves!==undefined)    leaves      = toArr(s.leaves);
+  if(s.weekendLogs!==undefined) weekendLogs = toArr(s.weekendLogs).map(l=>({...l, mids: toArr(l.mids)}));
+  if(s.TYPES!==undefined)     TYPES           = toArr(s.TYPES);
+  if(s.nextCid!==undefined)   nextCid         = s.nextCid;
+  if(s.nextSid!==undefined)   nextSid         = s.nextSid;
+  if(s.nextTid!==undefined)   nextTid         = s.nextTid;
+  if(s.nextMid!==undefined)   nextMid         = s.nextMid;
+  if(s.nextLid!==undefined)   nextLid         = s.nextLid;
+  if(s.nextWid!==undefined)   nextWid         = s.nextWid;
+  if(s.reportCustomers!==undefined) reportCustomers = toArr(s.reportCustomers).map(rc=>({
+    ...rc,
+    years: toArr(rc.years).map(y=>({
+      ...y,
+      quarters: toArr(y.quarters).map(q=>({
+        ...q,
+        assignees:  toArr(q.assignees),
+        subreports: toArr(q.subreports).map(sr=>({...sr, mids: toArr(sr.mids)}))
+      }))
+    }))
+  }));
+  if(s.nextRcid!==undefined)  nextRcid        = s.nextRcid;
 }
 function saveToStorage(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(collectState()));}catch(e){}}
 function loadFromStorage(){
