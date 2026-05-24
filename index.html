@@ -300,6 +300,28 @@ body{background:var(--bg);color:var(--text);font-family:var(--fm);min-height:100
 .cal-cell:hover{background:var(--hover-bg);}
 .cal-cell.today{background:var(--today-bg);}
 .cal-cell.other-month{opacity:.35;}
+.cal-cell.is-holiday{background:rgba(34,197,94,.06);}
+/* Toggle switch */
+.cal-toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+.cal-toggle{width:32px;height:18px;border-radius:9px;background:var(--border);display:inline-flex;align-items:center;padding:2px;transition:background .2s;flex-shrink:0;}
+.cal-toggle.on{background:var(--a1);}
+.cal-toggle-thumb{width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.cal-toggle.on .cal-toggle-thumb{transform:translateX(14px);}
+/* Holiday label in cell */
+.cal-holiday-tag{font-size:7px;font-weight:700;color:#16a34a;background:rgba(34,197,94,.12);border-radius:4px;padding:1px 4px;margin-bottom:2px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Adhoc event block in cell */
+.cal-event-block{font-size:8px;padding:2px 5px;border-radius:4px;margin-bottom:2px;display:flex;align-items:center;gap:3px;cursor:pointer;transition:opacity .15s;}
+.cal-event-block:hover{opacity:.8;}
+/* Upcoming events list */
+.cal-ev-item{display:flex;align-items:flex-start;gap:7px;padding:6px 8px;border-radius:9px;background:var(--bg);border:1.5px solid var(--border);font-size:9px;transition:all .15s;cursor:pointer;}
+.cal-ev-item:hover{border-color:var(--a5);}
+.cal-ev-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+.cal-ev-body{flex:1;min-width:0;}
+.cal-ev-title{font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-ev-date{font-size:8px;color:var(--muted);font-family:var(--fm);}
+.cal-ev-rm{background:none;border:none;color:var(--muted);opacity:0;cursor:pointer;font-size:10px;padding:0;line-height:1;flex-shrink:0;}
+.cal-ev-item:hover .cal-ev-rm{opacity:.4;}
+.cal-ev-rm:hover{opacity:1!important;color:var(--a2)!important;}
 .cal-date-num{font-size:8px;color:var(--muted);margin-bottom:2px;text-align:center;}
 .cal-today-dot{width:20px;height:20px;border-radius:50%;background:var(--text);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 2px;}
 .cal-event{border-radius:3px;padding:2px 5px;font-size:8px;font-weight:600;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;cursor:pointer;display:flex;align-items:center;gap:3px;}
@@ -829,9 +851,21 @@ window._fbUpload=scheduleUpload;
             <button class="cal-nav-btn" id="cal-next">›</button>
             <button class="cal-nav-btn" id="cal-today" style="font-size:10px;padding:2px 8px;">Today</button>
           </div>
-          <div class="cal-legend">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label class="cal-toggle-label" title="Show/hide project timelines and leave from other tabs">
+              <input type="checkbox" id="cal-show-projects" checked style="display:none;">
+              <span class="cal-toggle" id="cal-toggle-track">
+                <span class="cal-toggle-thumb"></span>
+              </span>
+              <span style="font-size:9px;color:var(--muted);font-family:var(--fm);">Show projects &amp; leave</span>
+            </label>
+            <button class="add-tender-btn" id="cal-add-event" style="font-size:10px;padding:6px 12px;">＋ Add Event</button>
+          </div>
+          <div class="cal-legend" id="cal-legend">
             <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(255,107,107,.4)"></div>Leave</div>
             <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(126,184,255,.4)"></div>Project</div>
+            <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#22c55e66;"></div>Holiday</div>
+            <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(199,125,255,.5)"></div>Event</div>
           </div>
         </div>
         <div class="cal-grid-wrap" id="cal-grid"></div>
@@ -844,6 +878,8 @@ window._fbUpload=scheduleUpload;
         <div class="panel-hdr"><span class="panel-hdr-title" style="color:var(--a2)">Leave Records</span></div>
         <div class="leave-list" id="leave-list"></div>
         <button class="add-leave-btn" id="open-add-leave">＋ Add Leave</button>
+        <div class="panel-hdr" style="margin-top:10px;"><span class="panel-hdr-title" style="color:var(--a5)">📅 Upcoming Events</span></div>
+        <div id="cal-event-list" style="padding:6px;display:flex;flex-direction:column;gap:4px;"></div>
       </div>
     </div>
   </div>
@@ -1139,6 +1175,61 @@ let weFilter='all', weMemberFilter='all';
 let nextCid=9,nextSid=11,nextTid=5,nextMid=100,nextLid=3;
 let dragging=null,editSid=null,editDiff=5,delTarget=null,editTid=null;
 let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+let calEvents=[]; // [{id,date,title,color,notes}] — adhoc calendar events
+let nextCalId=1;
+let calShowProjects=true; // toggle project/leave highlights
+
+// Malaysia public holidays (fixed + computed)
+function getMYHolidays(year){
+  const h=[];
+  const add=(m,d,name)=>h.push({date:`${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,name});
+  // Fixed national holidays
+  add(1,1,'New Year\'s Day');
+  add(2,1,'Federal Territory Day');
+  add(5,1,'Labour Day');
+  add(6,3,'Yang di-Pertuan Agong\'s Birthday'); // 1st Sat June
+  add(8,31,'National Day');
+  add(9,16,'Malaysia Day');
+  add(12,25,'Christmas Day');
+  // Fixed state-ish / always observed
+  add(1,14,'Thaipusam'); // approximate, Tamil calendar varies
+  // Approximate lunar/Islamic — these shift yearly; hardcode for ±3 years
+  const islamic={
+    2024:{
+      eidFitr:['4-10','4-11'],eidAdha:['6-17','6-18'],
+      maulidNabi:'9-16',awalMuharram:'7-7',nuzulQuran:'3-27',
+    },
+    2025:{
+      eidFitr:['3-31','4-1'],eidAdha:['6-7','6-8'],
+      maulidNabi:'9-5',awalMuharram:'6-27',nuzulQuran:'3-17',
+    },
+    2026:{
+      eidFitr:['3-20','3-21'],eidAdha:['5-27','5-28'],
+      maulidNabi:'8-25',awalMuharram:'6-16',nuzulQuran:'3-6',
+    },
+  };
+  const iy=islamic[year];
+  if(iy){
+    iy.eidFitr.forEach((d,i)=>add(...d.split('-').map(Number),i===0?'Hari Raya Aidilfitri':'Hari Raya Aidilfitri (2nd day)'));
+    iy.eidAdha.forEach((d,i)=>add(...d.split('-').map(Number),i===0?'Hari Raya Aidiladha':'Hari Raya Aidiladha (2nd day)'));
+    add(...iy.maulidNabi.split('-').map(Number),'Maulidur Rasul');
+    add(...iy.awalMuharram.split('-').map(Number),'Awal Muharram');
+    add(...iy.nuzulQuran.split('-').map(Number),'Nuzul Al-Quran');
+  }
+  // Chinese New Year (approximate)
+  const cny={2024:'2-10',2025:'1-29',2026:'2-17'};
+  if(cny[year]){
+    const[m,d]=cny[year].split('-').map(Number);
+    add(m,d,'Chinese New Year'); add(m,d+1,'Chinese New Year (2nd day)');
+  }
+  // Deepavali (approximate)
+  const diwali={2024:'10-31',2025:'10-20',2026:'11-8'};
+  if(diwali[year]){ add(...diwali[year].split('-').map(Number),'Deepavali'); }
+  // Wesak Day (approximate)
+  const wesak={2024:'5-22',2025:'5-12',2026:'5-31'};
+  if(wesak[year]){ add(...wesak[year].split('-').map(Number),'Wesak Day'); }
+  return h;
+}
 
 // ── UTILS ─────────────────────────────────────────────────────────────────
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1471,6 +1562,10 @@ function renderCalendar(){
   const startDate=new Date(calYear,calMonth,1-firstDay);
   const grid=document.getElementById('cal-grid');grid.innerHTML='';
 
+  // Build holiday map for this month's year
+  const holidays={};
+  getMYHolidays(calYear).forEach(h=>{ holidays[h.date]=(holidays[h.date]||[]).concat(h.name); });
+
   // Day-of-week header
   const hdr=document.createElement('div');hdr.className='cal-days-hdr';
   DAYS.forEach(d=>{const dn=document.createElement('div');dn.className='cal-day-name';dn.textContent=d;hdr.appendChild(dn);});
@@ -1478,12 +1573,9 @@ function renderCalendar(){
 
   const body=document.createElement('div');body.className='cal-body';
 
-  // 6 weeks
   for(let w=0;w<6;w++){
-    // check if any day in this week belongs to this month
     const weekStart=new Date(startDate);weekStart.setDate(startDate.getDate()+w*7);
-    const weekEnd=new Date(weekStart);weekEnd.setDate(weekStart.getDate()+6);
-    const monthStart=new Date(calYear,calMonth,1);const monthEnd=new Date(calYear,calMonth+1,0);
+    const monthEnd=new Date(calYear,calMonth+1,0);
     if(weekStart>monthEnd)break;
 
     const weekRow=document.createElement('div');weekRow.className='cal-week';
@@ -1495,10 +1587,12 @@ function renderCalendar(){
       const isToday=cellDate.toDateString()===today.toDateString();
       const isThisMonth=cellDate.getMonth()===calMonth&&cellDate.getFullYear()===calYear;
       const isSat=cellDate.getDay()===6,isSun=cellDate.getDay()===0;
+      const isHoliday=!!holidays[dateStr];
 
       const cell=document.createElement('div');
-      cell.className='cal-cell'+(isToday?' today':'')+(isThisMonth?'':' other-month');
-      if(isSat||isSun)cell.style.background='rgba(255,206,0,0.03)';
+      let cls='cal-cell'+(isToday?' today':'')+(isThisMonth?'':' other-month')+(isHoliday?' is-holiday':'');
+      cell.className=cls;
+      if((isSat||isSun)&&!isHoliday)cell.style.background='rgba(255,206,0,0.03)';
 
       // Date number
       const dateNum=document.createElement('div');
@@ -1508,59 +1602,77 @@ function renderCalendar(){
       cell.appendChild(dateNum);
 
       if(isThisMonth){
-        // All member events consolidated
-        // 1. Leaves — group by member
-        const dayLeaves=leaves.filter(l=>l.start<=dateStr&&l.end>=dateStr);
-        dayLeaves.forEach(l=>{
-          const m=getM(l.mid);if(!m)return;
-          const ev=document.createElement('div');ev.className='cal-event cal-leave-block';
-          ev.style.borderLeft=`3px solid ${m.color}`;
-          ev.innerHTML=`<span style="color:${m.color};font-weight:700;">${ini(m.name)}</span> ${esc(l.reason||'Leave')}`;
-          ev.title=`${m.name}: ${l.reason||'Leave'} (${fmtD(l.start)} – ${fmtD(l.end)})`;
-          ev.addEventListener('click',e=>{e.stopPropagation();openConfirm({type:'leave',lid:l.id},`${m.name} leave`);});
-          cell.appendChild(ev);
-        });
-
-        // 2. Active projects — show each project once (with all members as dots)
-        const onLeaveIds=new Set(dayLeaves.map(l=>l.mid));
-        const activeProjs=allSubs().filter(s=>s.start&&s.eta&&s.start<=dateStr&&s.eta>=dateStr&&s.pics.some(pid=>!onLeaveIds.has(pid)));
-        activeProjs.forEach(s=>{
-          const c=customers.find(cu=>cu.subs.some(x=>x.id===s.id));if(!c)return;
-          const cc=custColor(customers.indexOf(c));
-          const ev=document.createElement('div');ev.className='cal-proj-block';
-          ev.style.cssText=`background:${cc}18;border-left:3px solid ${cc};color:${cc};padding:2px 4px;border-radius:3px;margin-bottom:2px;font-size:8px;display:flex;align-items:center;gap:3px;`;
-          const titleSpan=document.createElement('span');titleSpan.style.cssText='font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-          titleSpan.textContent=s.title.length>14?s.title.slice(0,13)+'…':s.title;
-          const memberDots=document.createElement('span');memberDots.style.cssText='display:flex;gap:1px;flex-shrink:0;';
-          s.pics.filter(pid=>!onLeaveIds.has(pid)).slice(0,4).forEach(pid=>{const m=getM(pid);if(!m)return;const dot=document.createElement('span');dot.style.cssText=`width:10px;height:10px;border-radius:50%;background:${m.color};display:inline-block;border:1px solid ${m.color}88;`;dot.title=m.name;memberDots.appendChild(dot);});
-          if(s.pics.filter(pid=>!onLeaveIds.has(pid)).length>4){const more=document.createElement('span');more.style.cssText='font-size:7px;color:rgba(255,255,255,.5);';more.textContent=`+${s.pics.filter(pid=>!onLeaveIds.has(pid)).length-4}`;memberDots.appendChild(more);}
-          ev.appendChild(titleSpan);ev.appendChild(memberDots);
-          ev.title=`${s.title} | D${s.diff||5} · ${s.pct||0}% | Team: ${s.pics.map(p=>{const m=getM(p);return m?m.name:'?';}).join(', ')}`;
-          cell.appendChild(ev);
-        });
-
-        // 3. Weekend log entries for this date
-        const weLogs=weekendLogs.filter(l=>l.date===dateStr);
-        if(weLogs.length){
-          const weDiv=document.createElement('div');weDiv.style.cssText='margin-top:2px;';
-          weLogs.forEach(l=>{
-            const midsArr=(l.mids||[l.mid]).filter(Boolean);
-            const memberNames=midsArr.map(mid=>{const m=getM(mid);return m?ini(m.name):'?';}).join(',');
-            const ev=document.createElement('div');ev.style.cssText=`font-size:7px;background:rgba(255,206,0,.1);border-left:3px solid var(--a3);border-radius:3px;padding:2px 5px;margin-bottom:1px;color:var(--a3);display:flex;align-items:center;gap:3px;`;
-            ev.innerHTML=`<span style="font-weight:700">🌙 ${esc(memberNames)}</span><span style="opacity:.8">${esc(l.type)} ${l.hours}h</span>`;
-            ev.title=`${midsArr.map(mid=>{const m=getM(mid);return m?m.name:'?';}).join(', ')}: ${l.project} (${l.hours}h)`;
-            ev.addEventListener('click',e=>{e.stopPropagation();openConfirm({type:'weekend',wid:l.id},l.project);});
-            weDiv.appendChild(ev);});
-          cell.appendChild(weDiv);
+        // Holiday tag
+        if(isHoliday){
+          holidays[dateStr].forEach(hName=>{
+            const tag=document.createElement('span');tag.className='cal-holiday-tag';
+            tag.textContent='🇲🇾 '+hName;tag.title=hName;cell.appendChild(tag);
+          });
         }
+
+        // Project + leave highlights (toggleable)
+        if(calShowProjects){
+          const dayLeaves=leaves.filter(l=>l.start<=dateStr&&l.end>=dateStr);
+          dayLeaves.forEach(l=>{
+            const m=getM(l.mid);if(!m)return;
+            const ev=document.createElement('div');ev.className='cal-event cal-leave-block';
+            ev.style.borderLeft=`3px solid ${m.color}`;
+            ev.innerHTML=`<span style="color:${m.color};font-weight:700;">${ini(m.name)}</span> ${esc(l.reason||'Leave')}`;
+            ev.title=`${m.name}: ${l.reason||'Leave'} (${fmtD(l.start)} – ${fmtD(l.end)})`;
+            ev.addEventListener('click',e=>{e.stopPropagation();openConfirm({type:'leave',lid:l.id},`${m.name} leave`);});
+            cell.appendChild(ev);
+          });
+
+          const onLeaveIds=new Set(dayLeaves.map(l=>l.mid));
+          const activeProjs=allSubs().filter(s=>s.start&&s.eta&&s.start<=dateStr&&s.eta>=dateStr&&(s.pics||[]).some(pid=>!onLeaveIds.has(pid)));
+          activeProjs.forEach(s=>{
+            const c=customers.find(cu=>cu.subs.some(x=>x.id===s.id));if(!c)return;
+            const cc=custColor(customers.indexOf(c));
+            const ev=document.createElement('div');ev.className='cal-proj-block';
+            ev.style.cssText=`background:${cc}18;border-left:3px solid ${cc};color:${cc};padding:2px 4px;border-radius:3px;margin-bottom:2px;font-size:8px;display:flex;align-items:center;gap:3px;`;
+            const titleSpan=document.createElement('span');titleSpan.style.cssText='font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+            titleSpan.textContent=s.title.length>14?s.title.slice(0,13)+'…':s.title;
+            const pics=s.pics||[];
+            const memberDots=document.createElement('span');memberDots.style.cssText='display:flex;gap:1px;flex-shrink:0;';
+            pics.filter(pid=>!onLeaveIds.has(pid)).slice(0,4).forEach(pid=>{const m=getM(pid);if(!m)return;const dot=document.createElement('span');dot.style.cssText=`width:10px;height:10px;border-radius:50%;background:${m.color};display:inline-block;border:1px solid ${m.color}88;`;dot.title=m.name;memberDots.appendChild(dot);});
+            const extras=pics.filter(pid=>!onLeaveIds.has(pid));
+            if(extras.length>4){const more=document.createElement('span');more.style.cssText='font-size:7px;';more.textContent=`+${extras.length-4}`;memberDots.appendChild(more);}
+            ev.appendChild(titleSpan);ev.appendChild(memberDots);
+            ev.title=`${s.title} | D${s.diff||5} · ${s.pct||0}% | Team: ${pics.map(p=>{const m=getM(p);return m?m.name:'?';}).join(', ')}`;
+            cell.appendChild(ev);
+          });
+
+          // Weekend log entries
+          const weLogs=weekendLogs.filter(l=>l.date===dateStr);
+          if(weLogs.length){
+            weLogs.forEach(l=>{
+              const midsArr=(l.mids||[l.mid]).filter(Boolean);
+              const memberNames=midsArr.map(mid=>{const m=getM(mid);return m?ini(m.name):'?';}).join(',');
+              const ev=document.createElement('div');ev.style.cssText=`font-size:7px;background:rgba(255,206,0,.1);border-left:3px solid var(--a3);border-radius:3px;padding:2px 5px;margin-bottom:1px;color:var(--a3);display:flex;align-items:center;gap:3px;`;
+              ev.innerHTML=`<span style="font-weight:700">🌙 ${esc(memberNames)}</span><span style="opacity:.8">${esc(l.type)} ${l.hours}h</span>`;
+              ev.title=`${midsArr.map(mid=>{const m=getM(mid);return m?m.name:'?';}).join(', ')}: ${l.project} (${l.hours}h)`;
+              ev.addEventListener('click',e=>{e.stopPropagation();openConfirm({type:'weekend',wid:l.id},l.project);});
+              cell.appendChild(ev);
+            });
+          }
+        }
+
+        // Adhoc calendar events (always shown)
+        const dayEvents=calEvents.filter(e=>e.date===dateStr);
+        dayEvents.forEach(ev=>{
+          const evEl=document.createElement('div');evEl.className='cal-event-block';
+          evEl.style.cssText=`background:${ev.color||'var(--a5)'}22;border-left:3px solid ${ev.color||'var(--a5)'};color:${ev.color||'var(--a5)'};`;
+          evEl.innerHTML=`<span style="font-size:9px;">📌</span><span style="font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(ev.title)}</span>`;
+          evEl.title=ev.notes?`${ev.title}: ${ev.notes}`:ev.title;
+          evEl.addEventListener('click',e=>{ e.stopPropagation(); openCalEventModal(ev); });
+          cell.appendChild(evEl);
+        });
       }
 
-      // Click to add leave
+      // Click to add event (when no project/leave toggle or just to add)
       cell.addEventListener('click',()=>{
         if(!isThisMonth)return;
-        populateLeaveMembers();
-        document.getElementById('leave-start').value=dateStr;document.getElementById('leave-end').value=dateStr;
-        document.getElementById('leave-reason').value='';leaveModal.classList.remove('hidden');
+        openCalEventModal(null,dateStr);
       });
       weekRow.appendChild(cell);
     }
@@ -1568,6 +1680,7 @@ function renderCalendar(){
   }
   grid.appendChild(body);
   renderLeaveList();
+  renderCalEventList();
   renderCalHeatmap();
 }
 
@@ -2048,7 +2161,7 @@ document.getElementById('cal-today').addEventListener('click',()=>{calYear=new D
 
 // ── PERSISTENCE ──
 const STORAGE_KEY="proj_tracker_v1";
-function collectState(){return{members,customers,tenders,leaves,weekendLogs,TYPES,nextCid,nextSid,nextTid,nextMid,nextLid,nextWid,reportCustomers,nextRcid};}
+function collectState(){return{members,customers,tenders,leaves,weekendLogs,TYPES,nextCid,nextSid,nextTid,nextMid,nextLid,nextWid,calEvents,nextCalId,reportCustomers,nextRcid};}
 function toArr(v){ if(!v) return []; if(Array.isArray(v)) return v; return Object.values(v); }
 function applyState(s){
   if(!s)return;
@@ -2067,6 +2180,8 @@ function applyState(s){
   if(s.nextMid!==undefined)   nextMid         = s.nextMid;
   if(s.nextLid!==undefined)   nextLid         = s.nextLid;
   if(s.nextWid!==undefined)   nextWid         = s.nextWid;
+  if(s.calEvents!==undefined) calEvents       = toArr(s.calEvents);
+  if(s.nextCalId!==undefined) nextCalId       = s.nextCalId;
   if(s.reportCustomers!==undefined) reportCustomers = toArr(s.reportCustomers).map(rc=>({
     ...rc,
     years: toArr(rc.years).map(y=>({
@@ -2929,6 +3044,148 @@ document.getElementById('rpt-add-customer').addEventListener('click',()=>{
 
 // ── YEAR FILTER ───────────────────────────────────────────────────────────
 document.getElementById('rpt-year-filter').addEventListener('change',e=>{ rptActiveYear=e.target.value?parseInt(e.target.value):null; renderRptBoards(); });
+</script>
+
+<!-- ── CALENDAR EVENT MODAL ───────────────────────────────────────────────── -->
+<div class="modal-backdrop hidden" id="cal-event-modal">
+  <div class="confirm-box" style="width:360px;">
+    <div class="confirm-title" style="font-size:13px;margin-bottom:12px;" id="cal-event-modal-title">📌 Add Event</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="field-group">
+        <div class="field-label" style="margin-bottom:4px;">Event Title <span style="color:var(--a2)">*</span></div>
+        <input class="field-input" id="cal-ev-title" placeholder="e.g. Client Meeting, Site Visit…">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="field-group">
+          <div class="field-label" style="margin-bottom:4px;">Date</div>
+          <input class="field-input" id="cal-ev-date" type="date">
+        </div>
+        <div class="field-group">
+          <div class="field-label" style="margin-bottom:4px;">Colour</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;padding:6px 0;" id="cal-ev-color-picker">
+            <span class="cal-color-swatch" data-color="#7c3aed" style="background:#7c3aed;"></span>
+            <span class="cal-color-swatch" data-color="#2563eb" style="background:#2563eb;"></span>
+            <span class="cal-color-swatch" data-color="#16a34a" style="background:#16a34a;"></span>
+            <span class="cal-color-swatch" data-color="#d97706" style="background:#d97706;"></span>
+            <span class="cal-color-swatch" data-color="#dc2626" style="background:#dc2626;"></span>
+            <span class="cal-color-swatch" data-color="#0891b2" style="background:#0891b2;"></span>
+          </div>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label" style="margin-bottom:4px;">Notes</div>
+        <input class="field-input" id="cal-ev-notes" placeholder="Optional details…">
+      </div>
+    </div>
+    <div class="confirm-actions" style="display:flex;gap:7px;justify-content:flex-end;margin-top:14px;">
+      <button class="btn btn-danger" id="cal-ev-delete" style="margin-right:auto;display:none;">Delete</button>
+      <button class="btn btn-cancel" id="cal-ev-cancel">Cancel</button>
+      <button class="btn btn-save" id="cal-ev-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.cal-color-swatch{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;display:inline-block;}
+.cal-color-swatch:hover{transform:scale(1.2);}
+.cal-color-swatch.selected{border-color:var(--text);transform:scale(1.15);}
+</style>
+
+<script>
+// ── CALENDAR EVENTS ───────────────────────────────────────────────────────
+let _calEvCtx=null; // {ev} or null for new
+let _calEvColor='#7c3aed';
+
+function openCalEventModal(ev,dateStr){
+  _calEvCtx=ev||null;
+  document.getElementById('cal-event-modal-title').textContent=ev?'✏️ Edit Event':'📌 Add Event';
+  document.getElementById('cal-ev-title').value=ev?ev.title:'';
+  document.getElementById('cal-ev-date').value=ev?ev.date:(dateStr||'');
+  document.getElementById('cal-ev-notes').value=ev?ev.notes||'':'';
+  _calEvColor=ev?ev.color||'#7c3aed':'#7c3aed';
+  document.querySelectorAll('.cal-color-swatch').forEach(s=>{
+    s.classList.toggle('selected',s.dataset.color===_calEvColor);
+  });
+  document.getElementById('cal-ev-delete').style.display=ev?'inline-block':'none';
+  document.getElementById('cal-event-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('cal-ev-title').focus(),60);
+}
+function closeCalEventModal(){document.getElementById('cal-event-modal').classList.add('hidden');_calEvCtx=null;}
+
+document.querySelectorAll('.cal-color-swatch').forEach(s=>{
+  s.addEventListener('click',()=>{
+    _calEvColor=s.dataset.color;
+    document.querySelectorAll('.cal-color-swatch').forEach(x=>x.classList.toggle('selected',x===s));
+  });
+});
+
+document.getElementById('cal-ev-cancel').addEventListener('click',closeCalEventModal);
+document.getElementById('cal-event-modal').addEventListener('click',e=>{if(e.target===document.getElementById('cal-event-modal'))closeCalEventModal();});
+
+document.getElementById('cal-ev-save').addEventListener('click',()=>{
+  const title=document.getElementById('cal-ev-title').value.trim();
+  if(!title){document.getElementById('cal-ev-title').focus();return;}
+  const date=document.getElementById('cal-ev-date').value;
+  if(!date){document.getElementById('cal-ev-date').focus();return;}
+  const notes=document.getElementById('cal-ev-notes').value.trim();
+  if(_calEvCtx){
+    Object.assign(_calEvCtx,{title,date,color:_calEvColor,notes});
+  } else {
+    calEvents.push({id:'ce'+(nextCalId++),title,date,color:_calEvColor,notes});
+  }
+  closeCalEventModal(); renderCalendar(); renderAll(); saveToStorage();
+});
+
+document.getElementById('cal-ev-delete').addEventListener('click',()=>{
+  if(!_calEvCtx)return;
+  calEvents=calEvents.filter(e=>e.id!==_calEvCtx.id);
+  closeCalEventModal(); renderCalendar(); renderAll(); saveToStorage();
+});
+
+function renderCalEventList(){
+  const list=document.getElementById('cal-event-list');
+  if(!list)return;
+  list.innerHTML='';
+  const today=new Date().toISOString().slice(0,10);
+  const upcoming=[...calEvents].filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,15);
+  if(!upcoming.length){
+    list.innerHTML='<div style="font-size:9px;color:var(--muted);padding:6px 8px;">No upcoming events</div>';
+    return;
+  }
+  upcoming.forEach(ev=>{
+    const item=document.createElement('div');item.className='cal-ev-item';
+    item.innerHTML=`<div class="cal-ev-dot" style="background:${ev.color||'var(--a5)'}"></div>
+      <div class="cal-ev-body">
+        <div class="cal-ev-title">${esc(ev.title)}</div>
+        <div class="cal-ev-date">${fmtD(ev.date)}${ev.notes?` · ${esc(ev.notes.slice(0,30))}${ev.notes.length>30?'…':''}`:''}</div>
+      </div>
+      <button class="cal-ev-rm" title="Delete">✕</button>`;
+    item.addEventListener('click',e=>{if(e.target.classList.contains('cal-ev-rm'))return;openCalEventModal(ev);});
+    item.querySelector('.cal-ev-rm').addEventListener('click',e=>{
+      e.stopPropagation();
+      calEvents=calEvents.filter(x=>x.id!==ev.id);
+      renderCalendar(); renderAll(); saveToStorage();
+    });
+    list.appendChild(item);
+  });
+}
+
+// ── CALENDAR TOGGLE ───────────────────────────────────────────────────────
+const calToggleInput=document.getElementById('cal-show-projects');
+const calToggleTrack=document.getElementById('cal-toggle-track');
+function updateToggle(){
+  calShowProjects=calToggleInput.checked;
+  calToggleTrack.classList.toggle('on',calShowProjects);
+  renderCalendar();
+}
+calToggleInput.addEventListener('change',updateToggle);
+// Init toggle state
+calToggleTrack.classList.toggle('on',calShowProjects);
+
+// ── ADD EVENT BUTTON ──────────────────────────────────────────────────────
+document.getElementById('cal-add-event').addEventListener('click',()=>{
+  openCalEventModal(null, new Date().toISOString().slice(0,10));
+});
 </script>
 
 </body>
