@@ -293,25 +293,35 @@ body{background:var(--bg);color:var(--text);font-family:var(--fm);min-height:100
 .cal-days-hdr{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border);}
 .cal-day-name{padding:8px 4px;font-size:9px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.5px;}
 .cal-body{display:flex;flex-direction:column;}
-.cal-week{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border);}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border);align-items:stretch;}
 .cal-week:last-child{border-bottom:none;}
-.cal-cell{padding:5px 6px;min-height:90px;position:relative;border-right:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.cal-cell{padding:4px 5px;min-height:80px;height:auto;position:relative;border-right:1px solid var(--border);cursor:pointer;transition:background .15s;overflow:hidden;display:flex;flex-direction:column;gap:2px;box-sizing:border-box;}
 .cal-cell:last-child{border-right:none;}
 .cal-cell:hover{background:var(--hover-bg);}
 .cal-cell.today{background:var(--today-bg);}
 .cal-cell.other-month{opacity:.35;}
 .cal-cell.is-holiday{background:rgba(34,197,94,.06);}
-/* Toggle switch */
+.cal-date-num{font-size:11px;font-weight:600;color:var(--muted);line-height:1;margin-bottom:1px;flex-shrink:0;}
+.cal-today-dot{width:20px;height:20px;border-radius:50%;background:var(--text);color:var(--bg);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:2px;flex-shrink:0;}
+/* All event items inside cell — autosize, truncate */
+.cal-item{font-size:8px;padding:2px 5px;border-radius:4px;display:flex;align-items:center;gap:3px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex-shrink:0;width:100%;box-sizing:border-box;min-width:0;}
+.cal-item-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+/* Leave item — always visible, tinted cell background */
+.cal-leave-item{border-left:3px solid;}
+/* Project item */
+.cal-proj-item{border-left:3px solid;}
+/* Weekend item */
+.cal-we-item{border-left:3px solid var(--a3);background:rgba(255,206,0,.1);color:var(--a3);}
+/* Holiday tag */
+.cal-holiday-tag{font-size:7px;font-weight:700;color:#16a34a;background:rgba(34,197,94,.15);border-radius:4px;padding:1px 4px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;width:100%;box-sizing:border-box;}
+/* Adhoc event */
+.cal-event-block{font-size:8px;padding:2px 5px;border-radius:4px;display:flex;align-items:center;gap:3px;overflow:hidden;white-space:nowrap;flex-shrink:0;width:100%;box-sizing:border-box;cursor:pointer;transition:opacity .15s;border-left:3px solid;}
+.cal-event-block:hover{opacity:.8;}
 .cal-toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
 .cal-toggle{width:32px;height:18px;border-radius:9px;background:var(--border);display:inline-flex;align-items:center;padding:2px;transition:background .2s;flex-shrink:0;}
 .cal-toggle.on{background:var(--a1);}
 .cal-toggle-thumb{width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
 .cal-toggle.on .cal-toggle-thumb{transform:translateX(14px);}
-/* Holiday label in cell */
-.cal-holiday-tag{font-size:7px;font-weight:700;color:#16a34a;background:rgba(34,197,94,.12);border-radius:4px;padding:1px 4px;margin-bottom:2px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* Adhoc event block in cell */
-.cal-event-block{font-size:8px;padding:2px 5px;border-radius:4px;margin-bottom:2px;display:flex;align-items:center;gap:3px;cursor:pointer;transition:opacity .15s;}
-.cal-event-block:hover{opacity:.8;}
 /* Upcoming events list */
 .cal-ev-item{display:flex;align-items:flex-start;gap:7px;padding:6px 8px;border-radius:9px;background:var(--bg);border:1.5px solid var(--border);font-size:9px;transition:all .15s;cursor:pointer;}
 .cal-ev-item:hover{border-color:var(--a5);}
@@ -322,7 +332,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fm);min-height:100
 .cal-ev-rm{background:none;border:none;color:var(--muted);opacity:0;cursor:pointer;font-size:10px;padding:0;line-height:1;flex-shrink:0;}
 .cal-ev-item:hover .cal-ev-rm{opacity:.4;}
 .cal-ev-rm:hover{opacity:1!important;color:var(--a2)!important;}
-.cal-date-num{font-size:8px;color:var(--muted);margin-bottom:2px;text-align:center;}
+
 .cal-today-dot{width:20px;height:20px;border-radius:50%;background:var(--text);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 2px;}
 .cal-event{border-radius:3px;padding:2px 5px;font-size:8px;font-weight:600;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;cursor:pointer;display:flex;align-items:center;gap:3px;}
 .cal-leave-block{background:rgba(255,107,107,.2);border:1px solid rgba(255,107,107,.4);color:var(--a2);}
@@ -852,12 +862,12 @@ window._fbUpload=scheduleUpload;
             <button class="cal-nav-btn" id="cal-today" style="font-size:10px;padding:2px 8px;">Today</button>
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <label class="cal-toggle-label" title="Show/hide project timelines and leave from other tabs">
+            <label class="cal-toggle-label" title="Toggle: show project timelines only (leave always visible)">
               <input type="checkbox" id="cal-show-projects" checked style="display:none;">
               <span class="cal-toggle" id="cal-toggle-track">
                 <span class="cal-toggle-thumb"></span>
               </span>
-              <span style="font-size:9px;color:var(--muted);font-family:var(--fm);">Show projects &amp; leave</span>
+              <span style="font-size:9px;color:var(--muted);font-family:var(--fm);">Show projects</span>
             </label>
             <button class="add-tender-btn" id="cal-add-event" style="font-size:10px;padding:6px 12px;">＋ Add Event</button>
           </div>
@@ -1602,74 +1612,84 @@ function renderCalendar(){
       cell.appendChild(dateNum);
 
       if(isThisMonth){
-        // Holiday tag
+        // ── 1. Holiday tag (always) ──
         if(isHoliday){
           holidays[dateStr].forEach(hName=>{
-            const tag=document.createElement('span');tag.className='cal-holiday-tag';
-            tag.textContent='🇲🇾 '+hName;tag.title=hName;cell.appendChild(tag);
+            const tag=document.createElement('span');
+            tag.className='cal-holiday-tag';
+            tag.textContent='🇲🇾 '+hName;tag.title=hName;
+            cell.appendChild(tag);
           });
         }
 
-        // Project + leave highlights (toggleable)
-        if(calShowProjects){
-          const dayLeaves=leaves.filter(l=>l.start<=dateStr&&l.end>=dateStr);
-          dayLeaves.forEach(l=>{
-            const m=getM(l.mid);if(!m)return;
-            const ev=document.createElement('div');ev.className='cal-event cal-leave-block';
-            ev.style.borderLeft=`3px solid ${m.color}`;
-            ev.innerHTML=`<span style="color:${m.color};font-weight:700;">${ini(m.name)}</span> ${esc(l.reason||'Leave')}`;
-            ev.title=`${m.name}: ${l.reason||'Leave'} (${fmtD(l.start)} – ${fmtD(l.end)})`;
-            ev.addEventListener('click',e=>{e.stopPropagation();openConfirm({type:'leave',lid:l.id},`${m.name} leave`);});
-            cell.appendChild(ev);
-          });
+        // ── 2. Leave (ALWAYS shown, toggle doesn't affect this) ──
+        const dayLeaves=leaves.filter(l=>l.start<=dateStr&&l.end>=dateStr);
+        if(dayLeaves.length){
+          // Tint the cell with first member's colour at low opacity
+          const firstM=getM(dayLeaves[0].mid);
+          if(firstM) cell.style.backgroundImage=`linear-gradient(${firstM.color}12,${firstM.color}08)`;
+        }
+        dayLeaves.forEach(l=>{
+          const m=getM(l.mid);if(!m)return;
+          const ev=document.createElement('div');
+          ev.className='cal-item cal-leave-item';
+          ev.style.cssText=`border-color:${m.color};background:${m.color}18;color:${m.color};`;
+          const nameSpan=document.createElement('span');nameSpan.style.cssText=`font-weight:700;flex-shrink:0;`;nameSpan.textContent=ini(m.name);
+          const fullName=document.createElement('span');fullName.className='cal-item-text';fullName.style.cssText=`color:${m.color};opacity:.85;`;
+          fullName.textContent=` ${m.name}${l.reason?' · '+l.reason:''}`;
+          ev.appendChild(nameSpan);ev.appendChild(fullName);
+          ev.title=`${m.name}: ${l.reason||'Leave'} (${fmtD(l.start)} – ${fmtD(l.end)})`;
+          ev.addEventListener('click',e=>{e.stopPropagation();openConfirm({type:'leave',lid:l.id},`${m.name} leave`);});
+          cell.appendChild(ev);
+        });
 
+        // ── 3. Projects + weekend log (toggleable) ──
+        if(calShowProjects){
           const onLeaveIds=new Set(dayLeaves.map(l=>l.mid));
           const activeProjs=allSubs().filter(s=>s.start&&s.eta&&s.start<=dateStr&&s.eta>=dateStr&&(s.pics||[]).some(pid=>!onLeaveIds.has(pid)));
           activeProjs.forEach(s=>{
             const c=customers.find(cu=>cu.subs.some(x=>x.id===s.id));if(!c)return;
             const cc=custColor(customers.indexOf(c));
-            const ev=document.createElement('div');ev.className='cal-proj-block';
-            ev.style.cssText=`background:${cc}18;border-left:3px solid ${cc};color:${cc};padding:2px 4px;border-radius:3px;margin-bottom:2px;font-size:8px;display:flex;align-items:center;gap:3px;`;
-            const titleSpan=document.createElement('span');titleSpan.style.cssText='font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-            titleSpan.textContent=s.title.length>14?s.title.slice(0,13)+'…':s.title;
+            const ev=document.createElement('div');
+            ev.className='cal-item cal-proj-item';
+            ev.style.cssText=`border-color:${cc};background:${cc}14;color:${cc};`;
+            // member dots (max 3)
             const pics=s.pics||[];
-            const memberDots=document.createElement('span');memberDots.style.cssText='display:flex;gap:1px;flex-shrink:0;';
-            pics.filter(pid=>!onLeaveIds.has(pid)).slice(0,4).forEach(pid=>{const m=getM(pid);if(!m)return;const dot=document.createElement('span');dot.style.cssText=`width:10px;height:10px;border-radius:50%;background:${m.color};display:inline-block;border:1px solid ${m.color}88;`;dot.title=m.name;memberDots.appendChild(dot);});
-            const extras=pics.filter(pid=>!onLeaveIds.has(pid));
-            if(extras.length>4){const more=document.createElement('span');more.style.cssText='font-size:7px;';more.textContent=`+${extras.length-4}`;memberDots.appendChild(more);}
-            ev.appendChild(titleSpan);ev.appendChild(memberDots);
-            ev.title=`${s.title} | D${s.diff||5} · ${s.pct||0}% | Team: ${pics.map(p=>{const m=getM(p);return m?m.name:'?';}).join(', ')}`;
+            const activePics=pics.filter(pid=>!onLeaveIds.has(pid));
+            const dotsHtml=activePics.slice(0,3).map(pid=>{
+              const m=getM(pid);if(!m)return'';
+              return `<span style="width:8px;height:8px;border-radius:50%;background:${m.color};display:inline-block;flex-shrink:0;" title="${esc(m.name)}"></span>`;
+            }).join('');
+            const extra=activePics.length>3?`<span style="font-size:7px;">+${activePics.length-3}</span>`:'';
+            ev.innerHTML=`<span class="cal-item-text" style="font-weight:600;">${esc(s.title.length>16?s.title.slice(0,15)+'…':s.title)}</span><span style="display:flex;gap:1px;align-items:center;flex-shrink:0;">${dotsHtml}${extra}</span>`;
+            ev.title=`${s.title} | D${s.diff||5} · ${s.pct||0}% | ${pics.map(p=>{const m=getM(p);return m?m.name:'?';}).join(', ')}`;
             cell.appendChild(ev);
           });
 
-          // Weekend log entries
-          const weLogs=weekendLogs.filter(l=>l.date===dateStr);
-          if(weLogs.length){
-            weLogs.forEach(l=>{
-              const midsArr=(l.mids||[l.mid]).filter(Boolean);
-              const memberNames=midsArr.map(mid=>{const m=getM(mid);return m?ini(m.name):'?';}).join(',');
-              const ev=document.createElement('div');ev.style.cssText=`font-size:7px;background:rgba(255,206,0,.1);border-left:3px solid var(--a3);border-radius:3px;padding:2px 5px;margin-bottom:1px;color:var(--a3);display:flex;align-items:center;gap:3px;`;
-              ev.innerHTML=`<span style="font-weight:700">🌙 ${esc(memberNames)}</span><span style="opacity:.8">${esc(l.type)} ${l.hours}h</span>`;
-              ev.title=`${midsArr.map(mid=>{const m=getM(mid);return m?m.name:'?';}).join(', ')}: ${l.project} (${l.hours}h)`;
-              ev.addEventListener('click',e=>{e.stopPropagation();openConfirm({type:'weekend',wid:l.id},l.project);});
-              cell.appendChild(ev);
-            });
-          }
+          // Weekend log
+          weekendLogs.filter(l=>l.date===dateStr).forEach(l=>{
+            const midsArr=(l.mids||[l.mid]).filter(Boolean);
+            const memberNames=midsArr.map(mid=>{const m=getM(mid);return m?ini(m.name):'?';}).join(',');
+            const ev=document.createElement('div');ev.className='cal-item cal-we-item';
+            ev.innerHTML=`<span style="font-weight:700;flex-shrink:0;">🌙</span><span class="cal-item-text">${esc(memberNames)} ${esc(l.type)} ${l.hours}h</span>`;
+            ev.title=`${midsArr.map(mid=>{const m=getM(mid);return m?m.name:'?';}).join(', ')}: ${l.project} (${l.hours}h)`;
+            ev.addEventListener('click',e=>{e.stopPropagation();openConfirm({type:'weekend',wid:l.id},l.project);});
+            cell.appendChild(ev);
+          });
         }
 
-        // Adhoc calendar events (always shown)
-        const dayEvents=calEvents.filter(e=>e.date===dateStr);
-        dayEvents.forEach(ev=>{
+        // ── 4. Adhoc calendar events (always shown) ──
+        calEvents.filter(e=>e.date===dateStr).forEach(ev=>{
           const evEl=document.createElement('div');evEl.className='cal-event-block';
-          evEl.style.cssText=`background:${ev.color||'var(--a5)'}22;border-left:3px solid ${ev.color||'var(--a5)'};color:${ev.color||'var(--a5)'};`;
-          evEl.innerHTML=`<span style="font-size:9px;">📌</span><span style="font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(ev.title)}</span>`;
+          evEl.style.cssText=`background:${ev.color||'var(--a5)'}18;border-color:${ev.color||'var(--a5)'};color:${ev.color||'var(--a5)'};`;
+          evEl.innerHTML=`<span style="flex-shrink:0;">📌</span><span class="cal-item-text" style="font-weight:600;">${esc(ev.title)}</span>`;
           evEl.title=ev.notes?`${ev.title}: ${ev.notes}`:ev.title;
-          evEl.addEventListener('click',e=>{ e.stopPropagation(); openCalEventModal(ev); });
+          evEl.addEventListener('click',e=>{e.stopPropagation();openCalEventModal(ev);});
           cell.appendChild(evEl);
         });
       }
 
-      // Click to add event (when no project/leave toggle or just to add)
+      // Click blank area → add adhoc event
       cell.addEventListener('click',()=>{
         if(!isThisMonth)return;
         openCalEventModal(null,dateStr);
