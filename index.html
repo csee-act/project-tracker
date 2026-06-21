@@ -644,6 +644,66 @@ tr:hover .we-entry-del{color:var(--muted);}
 .sr-member-pill.selected .sr-member-pill-check{opacity:1;}
 @media(max-width:1100px){.rpt-layout{grid-template-columns:170px 1fr 190px;}}
 @media(max-width:900px){.rpt-layout{grid-template-columns:1fr;}.rpt-side-panel{position:static;}}
+
+/* ── SKILLS TAB ──────────────────────────────────────────────────────────── */
+.skl-layout{display:grid;grid-template-columns:190px 1fr 220px;gap:13px;align-items:start;padding-bottom:40px;}
+.skl-side-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:sticky;top:74px;box-shadow:var(--shadow);}
+.skl-pool{padding:6px;display:flex;flex-direction:column;gap:4px;}
+.skl-token{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--border);cursor:grab;user-select:none;transition:all .18s;}
+.skl-token:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.skl-token.skl-dragging{opacity:.22;transform:scale(.96);}
+.skl-token-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:9px;font-weight:800;flex-shrink:0;}
+.skl-token-name{font-size:10px;font-weight:600;color:var(--text);flex:1;}
+.skl-token-count{font-size:9px;font-family:var(--fm);color:var(--muted);background:var(--bg);padding:1px 5px;border-radius:10px;border:1px solid var(--border);}
+.skl-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.skl-pillars{display:flex;flex-direction:column;gap:12px;}
+/* Pillar card */
+.skl-pillar{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+.skl-pillar-head{padding:11px 16px;border-bottom:1px solid var(--border);background:var(--header-bg);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.skl-pillar-name-btn{font-family:var(--fh);font-size:13px;font-weight:800;color:var(--text);background:none;border:1.5px solid transparent;border-radius:6px;padding:2px 6px;cursor:pointer;transition:all .15s;}
+.skl-pillar-name-btn:hover{border-color:var(--border);background:var(--hover-bg);}
+.skl-pillar-actions{display:flex;gap:6px;align-items:center;}
+.skl-pillar-coverage{font-size:9px;font-family:var(--fm);color:var(--muted);}
+/* Sub-skill grid inside pillar */
+.skl-subskills{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0;}
+.skl-subskill{padding:10px 12px;border-right:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);min-height:78px;transition:background .15s;position:relative;}
+.skl-subskill.skl-over{background:var(--drag-over-bg);outline:2px dashed var(--a1);outline-offset:-2px;}
+.skl-subskill-head{display:flex;align-items:center;gap:5px;margin-bottom:6px;}
+.skl-subskill-name-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:7px;font-size:9px;font-weight:700;color:var(--text);cursor:pointer;padding:3px 9px;font-family:var(--fm);transition:all .15s;flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.skl-subskill-name-btn:hover{border-color:var(--a4);color:var(--a4);}
+.skl-subskill-rm{background:none;border:none;color:var(--border);cursor:pointer;font-size:11px;padding:0;line-height:1;flex-shrink:0;transition:color .15s;}
+.skl-subskill-rm:hover{color:var(--a2);}
+.skl-subskill-chips{display:flex;flex-wrap:wrap;gap:3px;min-height:20px;}
+.skl-subskill-chips:empty::after{content:'Drop member here';font-size:8px;color:var(--border);font-family:var(--fm);font-style:italic;}
+.skl-add-subskill{margin:8px 12px;padding:6px 10px;background:none;border:1.5px dashed var(--border);border-radius:8px;color:var(--muted);font-family:var(--fm);font-size:9px;cursor:pointer;transition:all .15s;width:calc(100% - 24px);}
+.skl-add-subskill:hover{border-color:var(--a4);color:var(--a4);background:rgba(37,99,235,.04);}
+/* Member chip in subskill */
+.skl-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 7px 3px 4px;border-radius:20px;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;}
+.skl-chip:hover{box-shadow:0 0 0 1px currentColor;}
+.skl-chip-av{width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;flex-shrink:0;}
+.skl-chip-level{font-size:7px;font-weight:800;padding:0 3px;border-radius:5px;background:currentColor;color:var(--card);flex-shrink:0;}
+.skl-chip-rm{background:none;border:none;color:currentColor;opacity:0;cursor:pointer;font-size:9px;padding:0;line-height:1;flex-shrink:0;transition:opacity .15s;}
+.skl-chip:hover .skl-chip-rm{opacity:.5;}
+.skl-chip-rm:hover{opacity:1!important;}
+/* Add pillar dashed strip */
+.skl-add-pillar-strip{padding:14px;border:2px dashed var(--border);border-radius:14px;color:var(--muted);font-family:var(--fm);font-size:11px;cursor:pointer;transition:all .15s;text-align:center;}
+.skl-add-pillar-strip:hover{border-color:var(--text);color:var(--text);background:var(--hover-bg);}
+/* Coverage panel */
+.skl-coverage-body{padding:12px 10px;display:flex;flex-direction:column;gap:8px;}
+.skl-cov-row{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:9px;background:var(--bg);}
+.skl-cov-name{font-size:9px;font-weight:600;flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.skl-cov-bar-bg{width:50px;height:5px;background:var(--cancel-bg);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.skl-cov-bar-fill{height:100%;border-radius:3px;transition:width .4s ease;}
+.skl-cov-score{font-family:var(--fh);font-size:10px;font-weight:800;width:24px;text-align:right;flex-shrink:0;}
+.skl-cov-section-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-top:4px;}
+.skl-gap-tag{font-size:7px;font-weight:700;padding:1px 6px;border-radius:10px;background:rgba(220,38,38,.12);color:var(--a2);}
+/* Level picker popover */
+.skl-level-popover{position:absolute;z-index:50;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);padding:6px;display:flex;gap:4px;}
+.skl-level-btn{width:24px;height:24px;border-radius:6px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.skl-level-btn:hover{border-color:var(--a4);color:var(--a4);}
+.skl-level-btn.active{background:var(--text);color:var(--bg);border-color:var(--text);}
+@media(max-width:1100px){.skl-layout{grid-template-columns:170px 1fr 200px;}}
+@media(max-width:900px){.skl-layout{grid-template-columns:1fr;}.skl-side-panel{position:static;}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
@@ -651,7 +711,7 @@ import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-ap
 import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import{getDatabase,ref,set,get,onValue,onDisconnect,remove}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 const firebaseConfig={
-  apiKey:"AIzaSyCm24SXIVE06EwfQkDRklfyCFcmnRtns7s",
+  apiKey:"AIzaSyBmjZ-placeholder-replace-with-real",
   authDomain:"project-dashboard-6b78c.firebaseapp.com",
   databaseURL:"https://project-dashboard-6b78c-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId:"project-dashboard-6b78c",
@@ -792,6 +852,7 @@ window._fbUpload=scheduleUpload;
     <button class="tab" data-tab="overview">Overview</button>
     <button class="tab" data-tab="workload">Workload</button>
     <button class="tab" data-tab="reports">📋 Reports</button>
+    <button class="tab" data-tab="skills">🧠 Skills</button>
     <button class="tab" data-tab="calendar">Calendar</button>
     <button class="tab" data-tab="tenders">Tenders</button>
     <button class="tab" data-tab="weekend">🌙 Weekend Log</button>
@@ -1141,6 +1202,50 @@ window._fbUpload=scheduleUpload;
     </div>
   </div>
 
+  <!-- ── SKILLS TAB ──────────────────────────────────────────────────────── -->
+  <div id="tab-skills" class="hidden">
+    <div class="skl-layout">
+
+      <!-- LEFT: Team pool -->
+      <div class="skl-side-panel">
+        <div class="panel-hdr"><span class="panel-hdr-title">Team</span></div>
+        <div id="skl-pool" class="skl-pool"></div>
+      </div>
+
+      <!-- CENTRE: Skill pillars -->
+      <div class="skl-centre">
+        <div class="skl-toolbar">
+          <div style="font-family:var(--fh);font-size:14px;font-weight:800;">🧠 Project Experience &amp; Skill Sets</div>
+          <button class="add-tender-btn" id="skl-add-pillar">＋ Add Skill Pillar</button>
+        </div>
+        <div id="skl-pillars" class="skl-pillars"></div>
+      </div>
+
+      <!-- RIGHT: Coverage summary -->
+      <div class="skl-side-panel">
+        <div class="panel-hdr"><span class="panel-hdr-title" style="color:var(--a4)">📊 Coverage</span></div>
+        <div id="skl-coverage" class="skl-coverage-body"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ── PILLAR / SUBSKILL EDIT MODAL ──────────────────────────────────────── -->
+<div class="modal-backdrop hidden" id="skl-edit-modal">
+  <div class="confirm-box" style="width:340px;">
+    <div class="confirm-title" style="font-size:13px;margin-bottom:12px;" id="skl-edit-title">Edit</div>
+    <div class="field-group" style="margin-bottom:12px;">
+      <div class="field-label" style="margin-bottom:4px;" id="skl-edit-label">Name</div>
+      <input class="field-input" id="skl-edit-input" placeholder="Name…">
+    </div>
+    <div class="confirm-actions" style="display:flex;gap:7px;justify-content:flex-end;">
+      <button class="btn btn-danger" id="skl-edit-remove" style="margin-right:auto;">Remove</button>
+      <button class="btn btn-cancel" id="skl-edit-cancel">Cancel</button>
+      <button class="btn btn-save" id="skl-edit-save">Save</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── CONFIRM DELETE ───────────────────────────────────────────────────── -->
@@ -2258,8 +2363,8 @@ function renderWeHeatmap(){
 document.getElementById('main-tabs').addEventListener('click',e=>{
   const btn=e.target.closest('.tab');if(!btn)return;const tab=btn.dataset.tab;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
-  ['assign','overview','tenders','workload','calendar','weekend','reports'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==tab));
-  if(tab==='overview')renderOverview();if(tab==='workload')renderWorkload();if(tab==='tenders')renderTenders();if(tab==='calendar')renderCalendar();if(tab==='weekend')renderWeekend();if(tab==='reports')renderReports();
+  ['assign','overview','tenders','workload','calendar','weekend','reports','skills'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==tab));
+  if(tab==='overview')renderOverview();if(tab==='workload')renderWorkload();if(tab==='tenders')renderTenders();if(tab==='calendar')renderCalendar();if(tab==='weekend')renderWeekend();if(tab==='reports')renderReports();if(tab==='skills')renderSkills();
 });
 
 document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
@@ -2269,7 +2374,7 @@ document.getElementById('cal-today').addEventListener('click',()=>{calYear=new D
 
 // ── PERSISTENCE ──
 const STORAGE_KEY="proj_tracker_v1";
-function collectState(){return{members,customers,tenders,leaves,weekendLogs,TYPES,nextCid,nextSid,nextTid,nextMid,nextLid,nextWid,nextTaskId,calEvents,nextCalId,reportCustomers,nextRcid};}
+function collectState(){return{members,customers,tenders,leaves,weekendLogs,TYPES,nextCid,nextSid,nextTid,nextMid,nextLid,nextWid,nextTaskId,calEvents,nextCalId,reportCustomers,nextRcid,skillPillars,nextPillarId,nextSubskillId};}
 function toArr(v){ if(!v) return []; if(Array.isArray(v)) return v; return Object.values(v); }
 function applyState(s){
   if(!s)return;
@@ -2303,6 +2408,12 @@ function applyState(s){
     }))
   }));
   if(s.nextRcid!==undefined)  nextRcid        = s.nextRcid;
+  if(s.skillPillars!==undefined) skillPillars = toArr(s.skillPillars).map(p=>({
+    ...p,
+    subskills: toArr(p.subskills).map(sk=>({...sk, assignees: toArr(sk.assignees)}))
+  }));
+  if(s.nextPillarId!==undefined)   nextPillarId   = s.nextPillarId;
+  if(s.nextSubskillId!==undefined) nextSubskillId = s.nextSubskillId;
 }
 function saveToStorage(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(collectState()));}catch(e){}}
 function loadFromStorage(){
@@ -2320,6 +2431,7 @@ const _origRenderAll=function(){
   if(!document.getElementById("tab-calendar").classList.contains("hidden"))renderCalendar();
   // Always render reports so data is ready when tab is clicked
   renderReports();
+  renderSkills();
 };
 function renderAll(){
   _origRenderAll();
@@ -2683,6 +2795,16 @@ const SR_STATUS_COLORS = {'Not Started':'var(--muted)','In Progress':'var(--a3)'
 let _srCtx   = null; // {rc, year, quarter} for the open sub-report modal
 let _srEditId = null; // id of sub-report being edited (null = new)
 let _qCtx    = null; // {rc, year, qObj} for quarter edit modal
+
+// ── SKILLS DATA ───────────────────────────────────────────────────────────
+// skillPillars:[{id,name,subskills:[{id,name,assignees:[{mid,level}]}]}]
+// level: 1=Beginner, 2=Intermediate, 3=Advanced, 4=Expert
+let skillPillars=[];
+let nextPillarId=1;
+let nextSubskillId=1;
+let sklDraggingMid=null;
+const SKL_LEVELS=[{v:1,label:'Beg',full:'Beginner',color:'#78716c'},{v:2,label:'Int',full:'Intermediate',color:'#2563eb'},{v:3,label:'Adv',full:'Advanced',color:'#d97706'},{v:4,label:'Exp',full:'Expert',color:'#16a34a'}];
+function sklLevelInfo(v){return SKL_LEVELS.find(l=>l.v===v)||SKL_LEVELS[0];}
 
 // ── helpers ──────────────────────────────────────────────────────────────
 function mkSrId(){ return 'sr'+(nextSrId++); }
@@ -3295,6 +3417,306 @@ calToggleTrack.classList.toggle('on',calShowProjects);
 document.getElementById('cal-add-event').addEventListener('click',()=>{
   openCalEventModal(null, new Date().toISOString().slice(0,10));
 });
+</script>
+
+<script>
+(function(){ // IIFE — keeps internal vars from colliding with other script blocks
+// ── SKILLS TAB ──────────────────────────────────────────────────────────
+let _sklEditCtx=null; // {type:'pillar'|'subskill', pillar, subskill}
+let _sklLevelPopover=null;
+
+function renderSkills(){
+  renderSklPool();
+  renderSklPillars();
+  renderSklCoverage();
+}
+
+function renderSklPool(){
+  const pool=document.getElementById('skl-pool');
+  if(!pool)return;
+  pool.innerHTML='';
+  members.forEach(m=>{
+    let count=0;
+    skillPillars.forEach(p=>p.subskills.forEach(sk=>{ count+=sk.assignees.filter(a=>a.mid===m.id).length; }));
+    const tok=document.createElement('div');
+    tok.className='skl-token';tok.draggable=true;tok.dataset.mid=m.id;
+    tok.innerHTML=`<div class="skl-token-av" style="background:${m.color}22;color:${m.color};border:1px solid ${m.color}44">${ini(m.name)}</div>
+      <span class="skl-token-name">${esc(m.name)}</span>
+      ${count?`<span class="skl-token-count">${count}</span>`:''}`;
+    tok.addEventListener('dragstart',e=>{ sklDraggingMid=m.id; tok.classList.add('skl-dragging'); e.dataTransfer.effectAllowed='copy'; e.dataTransfer.setData('text/plain',m.id); });
+    tok.addEventListener('dragend',()=>{ sklDraggingMid=null; tok.classList.remove('skl-dragging'); });
+    pool.appendChild(tok);
+  });
+}
+
+function renderSklPillars(){
+  const wrap=document.getElementById('skl-pillars');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  if(!skillPillars.length){
+    wrap.innerHTML=`<div class="rpt-no-data">No skill pillars yet. Click <strong>＋ Add Skill Pillar</strong> to start (e.g. "Cloud", "Database", "Networking").</div>`;
+  }
+  skillPillars.forEach(p=>{
+    const totalAssign=p.subskills.reduce((s,sk)=>s+sk.assignees.length,0);
+    const card=document.createElement('div');card.className='skl-pillar';
+    card.innerHTML=`
+      <div class="skl-pillar-head">
+        <button class="skl-pillar-name-btn" data-pid="${p.id}">${esc(p.name)}</button>
+        <div class="skl-pillar-actions">
+          <span class="skl-pillar-coverage">${totalAssign} assignment${totalAssign!==1?'s':''}</span>
+          <button class="add-sub-btn" data-pid="${p.id}" id="skl-add-sub-${p.id}">＋ Sub-skill</button>
+          <button class="rpt-del-board" data-pid="${p.id}" id="skl-del-pillar-${p.id}">🗑</button>
+        </div>
+      </div>
+      <div class="skl-subskills" id="skl-subskills-${p.id}"></div>
+    `;
+    card.querySelector('.skl-pillar-name-btn').addEventListener('click',()=>openSklEdit('pillar',p,null));
+    card.querySelector(`#skl-add-sub-${p.id}`).addEventListener('click',()=>{
+      _sklEditCtx={type:'new-subskill',pillar:p};
+      document.getElementById('skl-edit-title').textContent='＋ Add Sub-skill';
+      document.getElementById('skl-edit-label').textContent='Sub-skill name (e.g. "AWS", "PostgreSQL", "Firewall")';
+      document.getElementById('skl-edit-input').value='';
+      document.getElementById('skl-edit-remove').style.display='none';
+      document.getElementById('skl-edit-modal').classList.remove('hidden');
+      setTimeout(()=>document.getElementById('skl-edit-input').focus(),60);
+    });
+    card.querySelector(`#skl-del-pillar-${p.id}`).addEventListener('click',()=>{
+      if(!confirm(`Remove pillar "${p.name}" and all its sub-skills?`))return;
+      skillPillars=skillPillars.filter(x=>x.id!==p.id);
+      renderSkills(); saveToStorage();
+    });
+    wrap.appendChild(card);
+
+    const skWrap=card.querySelector(`#skl-subskills-${p.id}`);
+    if(!p.subskills.length){
+      skWrap.innerHTML=`<div style="padding:14px 16px;font-size:9px;color:var(--muted);grid-column:1/-1;">No sub-skills yet — click <strong>＋ Sub-skill</strong></div>`;
+    }
+    p.subskills.forEach(sk=>{
+      const skEl=document.createElement('div');
+      skEl.className='skl-subskill';
+      skEl.dataset.pid=p.id;skEl.dataset.skid=sk.id;
+      skEl.innerHTML=`
+        <div class="skl-subskill-head">
+          <button class="skl-subskill-name-btn" title="Click to rename">${esc(sk.name)}</button>
+          <button class="skl-subskill-rm" title="Remove sub-skill">✕</button>
+        </div>
+        <div class="skl-subskill-chips" id="skl-chips-${p.id}-${sk.id}"></div>
+      `;
+      skEl.querySelector('.skl-subskill-name-btn').addEventListener('click',()=>openSklEdit('subskill',p,sk));
+      skEl.querySelector('.skl-subskill-rm').addEventListener('click',()=>{
+        if(!confirm(`Remove sub-skill "${sk.name}"?`))return;
+        p.subskills=p.subskills.filter(x=>x.id!==sk.id);
+        renderSkills(); saveToStorage();
+      });
+
+      // Drop zone
+      skEl.addEventListener('dragover',e=>{ if(!sklDraggingMid)return; e.preventDefault(); skEl.classList.add('skl-over'); });
+      skEl.addEventListener('dragleave',e=>{ if(!skEl.contains(e.relatedTarget)) skEl.classList.remove('skl-over'); });
+      skEl.addEventListener('drop',e=>{
+        e.preventDefault(); skEl.classList.remove('skl-over');
+        const mid=sklDraggingMid||e.dataTransfer.getData('text/plain');
+        if(!mid)return;
+        if(sk.assignees.find(a=>a.mid===mid))return; // already assigned
+        sk.assignees.push({mid,level:2}); // default Intermediate
+        renderSkills(); saveToStorage();
+      });
+
+      card.querySelector(`#skl-subskills-${p.id}`).appendChild(skEl);
+
+      const chipsEl=skEl.querySelector(`#skl-chips-${p.id}-${sk.id}`);
+      sk.assignees.forEach(a=>{
+        const m=getM(a.mid);if(!m)return;
+        const lvl=sklLevelInfo(a.level||2);
+        const chip=document.createElement('div');
+        chip.className='skl-chip';
+        chip.style.cssText=`background:${m.color}18;color:${m.color};border:1px solid ${m.color}33;`;
+        chip.innerHTML=`<div class="skl-chip-av" style="background:${m.color}33;">${ini(m.name)}</div>
+          <span>${esc(m.name)}</span>
+          <span class="skl-chip-level" style="color:${lvl.color};background:${lvl.color}22;">${lvl.label}</span>
+          <button class="skl-chip-rm" title="Remove">✕</button>`;
+        chip.title=`${m.name} — ${lvl.full} (click to change level)`;
+        chip.addEventListener('click',e=>{
+          if(e.target.classList.contains('skl-chip-rm'))return;
+          openLevelPopover(chip,a,sk,p);
+        });
+        chip.querySelector('.skl-chip-rm').addEventListener('click',e=>{
+          e.stopPropagation();
+          sk.assignees=sk.assignees.filter(x=>x.mid!==a.mid);
+          renderSkills(); saveToStorage();
+        });
+        chipsEl.appendChild(chip);
+      });
+    });
+  });
+
+  // Add-pillar strip if there are pillars already (so it's easy to add more)
+  if(skillPillars.length){
+    const addStrip=document.createElement('div');
+    addStrip.className='skl-add-pillar-strip';
+    addStrip.textContent='＋ Add another Skill Pillar';
+    addStrip.addEventListener('click',()=>document.getElementById('skl-add-pillar').click());
+    wrap.appendChild(addStrip);
+  }
+}
+
+function openLevelPopover(anchorEl,assignee,subskill,pillar){
+  closeLevelPopover();
+  const pop=document.createElement('div');pop.className='skl-level-popover';
+  SKL_LEVELS.forEach(l=>{
+    const btn=document.createElement('button');btn.className='skl-level-btn'+(assignee.level===l.v?' active':'');
+    btn.textContent=l.label;btn.title=l.full;
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      assignee.level=l.v;
+      closeLevelPopover();
+      renderSkills(); saveToStorage();
+    });
+    pop.appendChild(btn);
+  });
+  document.body.appendChild(pop);
+  const rect=anchorEl.getBoundingClientRect();
+  pop.style.position='fixed';
+  pop.style.top=(rect.bottom+4)+'px';
+  pop.style.left=Math.min(rect.left,window.innerWidth-180)+'px';
+  _sklLevelPopover=pop;
+  setTimeout(()=>document.addEventListener('click',closeLevelPopoverOnce),10);
+}
+function closeLevelPopoverOnce(e){
+  if(_sklLevelPopover && !_sklLevelPopover.contains(e.target)) closeLevelPopover();
+}
+function closeLevelPopover(){
+  if(_sklLevelPopover){ _sklLevelPopover.remove(); _sklLevelPopover=null; }
+  document.removeEventListener('click',closeLevelPopoverOnce);
+}
+
+// ── PILLAR / SUBSKILL EDIT MODAL (rename / remove) ─────────────────────────
+function openSklEdit(type,pillar,subskill){
+  _sklEditCtx={type,pillar,subskill};
+  const isPillar=type==='pillar';
+  document.getElementById('skl-edit-title').textContent=isPillar?'✏️ Edit Skill Pillar':'✏️ Edit Sub-skill';
+  document.getElementById('skl-edit-label').textContent=isPillar?'Pillar name':'Sub-skill name';
+  document.getElementById('skl-edit-input').value=isPillar?pillar.name:subskill.name;
+  document.getElementById('skl-edit-remove').style.display='inline-block';
+  document.getElementById('skl-edit-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('skl-edit-input').focus(),60);
+}
+function closeSklEdit(){document.getElementById('skl-edit-modal').classList.add('hidden');_sklEditCtx=null;}
+document.getElementById('skl-edit-input').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('skl-edit-save').click();}});
+document.getElementById('skl-edit-cancel').addEventListener('click',closeSklEdit);
+document.getElementById('skl-edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('skl-edit-modal'))closeSklEdit();});
+document.getElementById('skl-edit-save').addEventListener('click',()=>{
+  if(!_sklEditCtx)return;
+  const val=document.getElementById('skl-edit-input').value.trim();
+  if(!val)return;
+  if(_sklEditCtx.type==='new-pillar'){
+    skillPillars.push({id:'pl'+(nextPillarId++),name:val,subskills:[]});
+  } else if(_sklEditCtx.type==='new-subskill'){
+    _sklEditCtx.pillar.subskills.push({id:'sk'+(nextSubskillId++),name:val,assignees:[]});
+  } else if(_sklEditCtx.type==='pillar'){
+    _sklEditCtx.pillar.name=val;
+  } else {
+    _sklEditCtx.subskill.name=val;
+  }
+  closeSklEdit(); renderSkills(); saveToStorage();
+});
+document.getElementById('skl-edit-remove').addEventListener('click',()=>{
+  if(!_sklEditCtx)return;
+  if(_sklEditCtx.type==='pillar'){
+    if(!confirm(`Remove pillar "${_sklEditCtx.pillar.name}"?`))return;
+    skillPillars=skillPillars.filter(x=>x.id!==_sklEditCtx.pillar.id);
+  } else {
+    if(!confirm(`Remove sub-skill "${_sklEditCtx.subskill.name}"?`))return;
+    _sklEditCtx.pillar.subskills=_sklEditCtx.pillar.subskills.filter(x=>x.id!==_sklEditCtx.subskill.id);
+  }
+  closeSklEdit(); renderSkills(); saveToStorage();
+});
+
+// ── ADD PILLAR ───────────────────────────────────────────────────────────
+document.getElementById('skl-add-pillar').addEventListener('click',()=>{
+  _sklEditCtx={type:'new-pillar'};
+  document.getElementById('skl-edit-title').textContent='＋ Add Skill Pillar';
+  document.getElementById('skl-edit-label').textContent='Pillar name (e.g. "Cloud", "Database", "Networking")';
+  document.getElementById('skl-edit-input').value='';
+  document.getElementById('skl-edit-remove').style.display='none';
+  document.getElementById('skl-edit-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('skl-edit-input').focus(),60);
+});
+
+// ── COVERAGE PANEL ──────────────────────────────────────────────────────
+function renderSklCoverage(){
+  const body=document.getElementById('skl-coverage');
+  if(!body)return;
+  body.innerHTML='';
+
+  if(!skillPillars.length){
+    body.innerHTML=`<div class="rpt-no-data">Add skill pillars to see team coverage.</div>`;
+    return;
+  }
+
+  // Per-member total assignment count (weighted by level)
+  const memberScores={};
+  members.forEach(m=>{memberScores[m.id]=0;});
+  let totalSubskills=0,coveredSubskills=0;
+  const gaps=[];
+
+  skillPillars.forEach(p=>{
+    p.subskills.forEach(sk=>{
+      totalSubskills++;
+      if(sk.assignees.length) coveredSubskills++;
+      else gaps.push(`${p.name} › ${sk.name}`);
+      sk.assignees.forEach(a=>{
+        if(memberScores[a.mid]===undefined) memberScores[a.mid]=0;
+        memberScores[a.mid]+=(a.level||2);
+      });
+    });
+  });
+
+  const maxScore=Math.max(...Object.values(memberScores),1);
+  const ranked=members.map(m=>({m,score:memberScores[m.id]||0})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+
+  // Coverage summary stat
+  const covPct=totalSubskills?Math.round(coveredSubskills/totalSubskills*100):0;
+  const statRow=document.createElement('div');statRow.className='rpt-stat-row';
+  statRow.innerHTML=`<span>Sub-skills covered</span><span class="rpt-stat-val" style="color:${covPct===100?'var(--a1)':covPct>=50?'var(--a3)':'var(--a2)'}">${coveredSubskills}/${totalSubskills}</span>`;
+  body.appendChild(statRow);
+
+  // Top contributors label
+  const lbl=document.createElement('div');lbl.className='skl-cov-section-label';lbl.textContent='Top Contributors';
+  body.appendChild(lbl);
+
+  if(!ranked.length){
+    const none=document.createElement('div');none.className='rpt-no-data';none.style.padding='10px';none.textContent='No one assigned yet';
+    body.appendChild(none);
+  } else {
+    ranked.slice(0,8).forEach(x=>{
+      const row=document.createElement('div');row.className='skl-cov-row';
+      row.innerHTML=`<div class="rpt-lb-av" style="background:${x.m.color}22;color:${x.m.color};border:1px solid ${x.m.color}44;">${ini(x.m.name)}</div>
+        <span class="skl-cov-name">${esc(x.m.name)}</span>
+        <div class="skl-cov-bar-bg"><div class="skl-cov-bar-fill" style="width:${Math.round(x.score/maxScore*100)}%;background:${x.m.color};"></div></div>
+        <span class="skl-cov-score" style="color:${x.m.color}">${x.score}</span>`;
+      body.appendChild(row);
+    });
+  }
+
+  // Gaps label
+  if(gaps.length){
+    const gapLbl=document.createElement('div');gapLbl.className='skl-cov-section-label';gapLbl.style.color='var(--a2)';gapLbl.textContent='Coverage Gaps';
+    body.appendChild(gapLbl);
+    gaps.slice(0,6).forEach(g=>{
+      const gapRow=document.createElement('div');gapRow.className='skl-cov-row';gapRow.style.background='rgba(220,38,38,.06)';
+      gapRow.innerHTML=`<span class="skl-cov-name" style="color:var(--a2);">${esc(g)}</span><span class="skl-gap-tag">No one</span>`;
+      body.appendChild(gapRow);
+    });
+    if(gaps.length>6){
+      const more=document.createElement('div');more.style.cssText='font-size:8px;color:var(--muted);padding:2px 9px;';
+      more.textContent=`+${gaps.length-6} more gap${gaps.length-6!==1?'s':''}`;
+      body.appendChild(more);
+    }
+  }
+}
+
+window.renderSkills = renderSkills; // expose for renderAll() and tab-switch handler in other script blocks
+})(); // end Skills IIFE
 </script>
 
 </body>
