@@ -658,8 +658,14 @@ tr:hover .we-entry-del{color:var(--muted);}
 .skl-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
 .skl-pillars{display:flex;flex-direction:column;gap:12px;}
 /* Pillar card */
-.skl-pillar{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
-.skl-pillar-head{padding:11px 16px;border-bottom:1px solid var(--border);background:var(--header-bg);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.skl-pillar{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s,opacity .15s,transform .15s;}
+.skl-pillar.pillar-dragging{opacity:.3;box-shadow:none;transform:scale(.98);}
+.skl-pillar.pillar-drag-over-top{box-shadow:0 -3px 0 var(--a4),var(--shadow-md);}
+.skl-pillar.pillar-drag-over-bot{box-shadow:0 3px 0 var(--a4),var(--shadow-md);}
+.skl-pillar-head{padding:11px 16px;border-bottom:1px solid var(--border);background:var(--header-bg);display:flex;align-items:center;gap:8px;}
+.skl-pillar-drag-handle{color:var(--border);cursor:grab;font-size:15px;padding:2px 3px;border-radius:5px;transition:color .15s;flex-shrink:0;user-select:none;line-height:1;}
+.skl-pillar-drag-handle:hover{color:var(--muted);background:var(--hover-bg);}
+.skl-pillar-drag-handle:active{cursor:grabbing;}
 .skl-pillar-name-btn{font-family:var(--fh);font-size:13px;font-weight:800;color:var(--text);background:none;border:1.5px solid transparent;border-radius:6px;padding:2px 6px;cursor:pointer;transition:all .15s;}
 .skl-pillar-name-btn:hover{border-color:var(--border);background:var(--hover-bg);}
 .skl-pillar-actions{display:flex;gap:6px;align-items:center;}
@@ -3449,20 +3455,27 @@ function renderSklPool(){
   });
 }
 
+let _pillarDragSrc=null; // index of pillar being dragged
+
 function renderSklPillars(){
   const wrap=document.getElementById('skl-pillars');
   if(!wrap)return;
   wrap.innerHTML='';
   if(!skillPillars.length){
     wrap.innerHTML=`<div class="rpt-no-data">No skill pillars yet. Click <strong>＋ Add Skill Pillar</strong> to start (e.g. "Cloud", "Database", "Networking").</div>`;
+    return;
   }
-  skillPillars.forEach(p=>{
+  skillPillars.forEach((p,pIdx)=>{
     const totalAssign=p.subskills.reduce((s,sk)=>s+sk.assignees.length,0);
-    const card=document.createElement('div');card.className='skl-pillar';
+    const card=document.createElement('div');
+    card.className='skl-pillar';
+    card.draggable=true;
+    card.dataset.pidx=pIdx;
     card.innerHTML=`
       <div class="skl-pillar-head">
+        <span class="skl-pillar-drag-handle" title="Drag to reorder">⠿</span>
         <button class="skl-pillar-name-btn" data-pid="${p.id}">${esc(p.name)}</button>
-        <div class="skl-pillar-actions">
+        <div class="skl-pillar-actions" style="margin-left:auto;">
           <span class="skl-pillar-coverage">${totalAssign} assignment${totalAssign!==1?'s':''}</span>
           <button class="add-sub-btn" data-pid="${p.id}" id="skl-add-sub-${p.id}">＋ Sub-skill</button>
           <button class="rpt-del-board" data-pid="${p.id}" id="skl-del-pillar-${p.id}">🗑</button>
@@ -3470,6 +3483,57 @@ function renderSklPillars(){
       </div>
       <div class="skl-subskills" id="skl-subskills-${p.id}"></div>
     `;
+
+    // ── Pillar drag-to-reorder ──────────────────────────────────────────
+    card.addEventListener('dragstart',e=>{
+      // Only allow drag when initiated from the handle
+      if(!e.target.classList.contains('skl-pillar-drag-handle')){
+        e.preventDefault(); return;
+      }
+      _pillarDragSrc=pIdx;
+      card.classList.add('pillar-dragging');
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain','pillar-reorder');
+    });
+    card.addEventListener('dragend',()=>{
+      card.classList.remove('pillar-dragging','pillar-drag-over-top','pillar-drag-over-bot');
+      _pillarDragSrc=null;
+      // Clear all indicators
+      wrap.querySelectorAll('.skl-pillar').forEach(c=>c.classList.remove('pillar-drag-over-top','pillar-drag-over-bot'));
+    });
+    card.addEventListener('dragover',e=>{
+      // Only handle pillar reorder drags, not member token drags
+      if(_pillarDragSrc===null)return;
+      if(_pillarDragSrc===pIdx)return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      const rect=card.getBoundingClientRect();
+      const isTop=(e.clientY-rect.top)<rect.height/2;
+      card.classList.toggle('pillar-drag-over-top',isTop);
+      card.classList.toggle('pillar-drag-over-bot',!isTop);
+    });
+    card.addEventListener('dragleave',e=>{
+      if(!card.contains(e.relatedTarget)){
+        card.classList.remove('pillar-drag-over-top','pillar-drag-over-bot');
+      }
+    });
+    card.addEventListener('drop',e=>{
+      e.preventDefault(); e.stopPropagation();
+      card.classList.remove('pillar-drag-over-top','pillar-drag-over-bot');
+      if(_pillarDragSrc===null||_pillarDragSrc===pIdx)return;
+      // Determine insert position: top = before this, bottom = after this
+      const rect=card.getBoundingClientRect();
+      const isTop=(e.clientY-rect.top)<rect.height/2;
+      const insertAfter=isTop?pIdx-1:pIdx;
+      // Reorder
+      const moved=skillPillars.splice(_pillarDragSrc,1)[0];
+      const targetIdx=_pillarDragSrc<pIdx?insertAfter:insertAfter+1;
+      skillPillars.splice(Math.max(0,targetIdx),0,moved);
+      _pillarDragSrc=null;
+      renderSkills(); saveToStorage();
+    });
+
+    // ── Existing pillar events ─────────────────────────────────────────
     card.querySelector('.skl-pillar-name-btn').addEventListener('click',()=>openSklEdit('pillar',p,null));
     card.querySelector(`#skl-add-sub-${p.id}`).addEventListener('click',()=>{
       _sklEditCtx={type:'new-subskill',pillar:p};
